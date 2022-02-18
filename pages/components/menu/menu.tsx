@@ -1,10 +1,12 @@
 import { Menu, Input, Avatar, Button } from '@arco-design/web-react';
+import { useRouter } from 'next/router';
 // import style from  '../../../styles/menu.module.scss'
 import style from './menu.module.sass'
 const MenuItem = Menu.Item;
 // const SubMenu = Menu.SubMenu;
 
 export default function MenuDom() {
+  const router = useRouter()
   return (
     <div className={style.menu}>
       <Menu mode='horizontal' theme='dark' defaultSelectedKeys={['1']}>
@@ -26,7 +28,7 @@ export default function MenuDom() {
         
       </Menu>
       <div className={style.creator}>
-        <Button type='primary'>
+        <Button type='primary' onClick={() => router.push('/writing')}>
           写文章
         </Button>
         <Avatar size={64} className={style.avatar}>
