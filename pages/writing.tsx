@@ -1,7 +1,7 @@
 import { Button, Input, List } from '@arco-design/web-react';
 import Editor from 'md-editor-rt';
 import { useState } from 'react';
-import style from '../styles/Writing.module.sass'
+import style from '../styles/Writing.module.sass';
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 
 
@@ -19,17 +19,16 @@ const reorder = (list: data, startIndex: number, endIndex: number): data => {
 };
 
 const getListStyle = (isDraggingOver:boolean) => ({
-  background: isDraggingOver ? "lightblue" : "lightgrey",
-  padding: "0",
-  width: 150
+  background: isDraggingOver ? "#E5E6EB" : "#F2F3F5",
+  width: 150,
+  height: '550'
 })
 
 const getItemStyle = (isDragging: any, draggableStyle: any) => ({
   // some basic styles to make the items look a bit nicer
   userSelect: "none",
-  margin: `0 0 15px 0`,
-  background: isDragging ? "lightgreen" : "grey",
-
+  height: '40px',
+  margin: `0 0 10px 0`,
   // styles we need to apply on draggables
   ...draggableStyle
 });
@@ -42,6 +41,7 @@ export default function UserArticle() {
     if(!result.destination) return
     const newdata = reorder(data, result.source.index, result.destination.index)
     setdata(newdata)
+    setfoucs(result.destination.index)
   }
   return (
     <div className={style.wrapper}>
@@ -61,50 +61,40 @@ export default function UserArticle() {
       <div className={style.writing}>
         <div className={style.catalogue} onClick={(e) => {
         }}>
-        {/* <List
-          className={style.list}
-          size='small'
-          header='List title'
-          dataSource={data}
-          render={(item, index) => 
-            <List.Item key={index} className={style.listItem}>
-              <Button className={index === foucs ? style.foucsBtn : style.listBtn} type='text' onClick={() => setfoucs(index)}>
-                {index+1}
-              </Button>
-            </List.Item>}
-        /> */}
-        <DragDropContext onDragEnd={onDragend}>
-          <Droppable droppableId="droppable">
-            {
-              (provided, snapshot) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  style={getListStyle(snapshot.isDraggingOver)} 
-                  >
-                    {data.map((item, index) => (
-                      <Draggable key={item.id} draggableId={String(item.id)} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={getItemStyle(
-                              snapshot.isDragging,
-                              provided.draggableProps.style
-                            )}
-                          >
-                              <div onClick={() => {setfoucs(index)}}>{item.id+1}</div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}  
-                </div>
-              )
-            }
-          </Droppable>
-        </DragDropContext>
+          <DragDropContext onDragEnd={onDragend}>
+            <Droppable droppableId="droppable">
+              {
+                (provided, snapshot) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    style={getListStyle(snapshot.isDraggingOver)} 
+                    >
+                      {data.map((item, index) => (
+                        <Draggable key={item.id} draggableId={String(item.id)} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              style={getItemStyle(
+                                snapshot.isDragging,
+                                provided.draggableProps.style
+                              )}
+                            >
+                                <div onClick={() => {setfoucs(index)}} className={style.listBtn}>
+                                  {item.id+1} 
+                                </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}  
+                  </div>
+                )
+              }
+            </Droppable>
+          </DragDropContext>
         </div>
         <Editor 
           modelValue={data[foucs].content}

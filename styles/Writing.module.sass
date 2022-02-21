@@ -5,19 +5,19 @@
     display: flex
     justify-content: space-between
     align-items: center
+    border: 1px solid $color-gray
     .btn
       margin: 0 20px
   .writing
     display: flex
+    border: 1px solid $color-gray
     .catalogue
       height: 550px
       width: 150px
       .listBtn
-        width: 150px
-        height: 50px
-      .foucsBtn
-        width: 150px
-        height: 50px
-        background-color: #59aed9
+        color: #fff
+        background-color: $color-blue-3
+        @include textCenter(40px)
+        
   .footer
     height: 30px
