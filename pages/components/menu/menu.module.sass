@@ -1,13 +1,17 @@
 .menu 
   box-sizing: border-box
+  min-width: 350px
   width: 100%
-  background-color: var(--color-neutral-2)
-
-.creator 
-  position: absolute
-  top: 2%
-  right: 0%
-  .avatar
-    margin: 0 20px
+  display: flex
+  .main
+    flex: 4.5
+    .canClick:hover
+      cursor: pointer
+  .creator 
+    flex: 1
+    min-width: 156px
+    height: 70px
+    line-height: 70px
+    background-color: black
   
     

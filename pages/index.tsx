@@ -1,5 +1,4 @@
 import type { NextPage } from 'next'
-import Image from 'next/image'
 import styles from '../styles/Home.module.sass'
 import MenuDom from './components/menu/menu'
 import UserArticle from './components/user-article/user-article';
