@@ -11,3 +11,9 @@ export type musterArticle = {
   title: string,
   article: string
 }
+
+export type Category = {
+  name: string,
+  description: string,
+  category_id: string
+}

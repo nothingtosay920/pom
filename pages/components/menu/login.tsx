@@ -4,7 +4,7 @@ import Head from "next/head"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { useQuery } from "react-query"
-import { LoginApi, useGetUserByCookie } from "../../utills/http"
+import { LoginApi, useGetUserByCookie } from "../../api/interface/api"
 import { RAF } from "../../utills/RAF"
 import style from './login.module.sass'
 
@@ -20,7 +20,7 @@ export default function Login() {
   const createMutation = LoginApi({
     phone: phone+''
   })
-  const {status: loginStatus, data} = useGetUserByCookie()
+  // const {status: loginStatus, data} = useGetUserByCookie()
 
   
 
@@ -56,7 +56,7 @@ export default function Login() {
       <Head>
         <title>user的个人主页</title>
       </Head>
-      {loginStatus === 'success' 
+      {'success' === 'success' 
       ?   <Avatar size={40} className={style.avatar} onClick={() => router.push('/user')}>
           Arco
         </Avatar>

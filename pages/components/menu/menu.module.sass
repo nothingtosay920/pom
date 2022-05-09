@@ -1,17 +1,25 @@
 .menu 
-  box-sizing: border-box
-  min-width: 350px
-  width: 100%
+  background-color: rgb(35, 35, 36)
+  width: 10rem
   display: flex
+  align-items: center
   .main
-    flex: 4.5
-    .canClick:hover
-      cursor: pointer
-  .creator 
     flex: 1
-    min-width: 156px
-    height: 70px
-    line-height: 70px
-    background-color: black
-  
+    flex-basis: 3rem
+  .canClick
+    margin-left: 0.1rem
+  .canClick:hover
+    cursor: pointer
+  .inputArea
+    width: 2rem
+    height: 0.2rem
+  .arco-input-group-addafter
+    background-color: rgb(35, 35, 36)
+  .writen
+    width: 0.5rem    
+  .creator 
+    width: 2rem
+@media screen and (max-width: 380px) 
+  .menu .writen
+    visibility: hidden  
     

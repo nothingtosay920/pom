@@ -3,7 +3,7 @@ import Editor from 'md-editor-rt';
 import { useState } from 'react';
 import style from '../styles/Writing.module.sass';
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
-import { SubmitMusterArticle } from './utills/http';
+import { SubmitMusterArticle } from './api/interface/api';
 
 
 type data = {
