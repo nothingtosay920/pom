@@ -1,0 +1,50 @@
+.wrapper
+  background-color: $color-gray
+  min-height: 89vh
+  padding-top: 20px
+  min-width: 1000px
+  .main
+    width: 1000px
+    margin: 0 auto
+    min-height: 500px
+    display: flex
+    .content
+      background-color: #fff
+    .menu
+      width: 300px
+      margin:0 20px
+    .actBtn
+      color: $color-dark-3
+    .actionList
+      display: flex
+      .panel
+        @include panel-small()
+.acticle
+  margin: 10px 0
+  display: flex
+  justify-content: space-between
+  align-items: center
+  .artcile_id
+    color: $color-dark-1
+  .description
+    color: $color-dark-1
+.panelWrapper
+  width: 0.4rem
+  height: 0.4rem
+  background-color: #fff
+  display: flex
+  align-items: center
+  justify-content: center
+  cursor: pointer
+  .panel
+    @include panel()
+.collapseHeader
+  white-space: nowrap
+  text-overflow: ellipsis
+  overflow: hidden
+  font-size: 20px
+  width: 400px
+
+  
+        
+      

@@ -7,12 +7,12 @@
     align-items: center
     border: 1px solid $color-gray
     .btn
-      margin: 0 20px
+      margin: 0 18px
   .writing
     display: flex
     border: 1px solid $color-gray
     .catalogue
-      height: 550px
+      height: 600px
       width: 150px
       .listBtn
         color: #fff
@@ -24,3 +24,17 @@
         @include textCenter(40px)
   .footer
     height: 30px
+.drawer
+  min-width: 375px
+.tool
+  display: flex
+  justify-content: center
+  align-items: center
+  height: 0.3rem
+  min-height: 40px
+  .svg
+    margin: 0 0.1rem 
+    .panel
+      @include panel-small()
+  .svg:hover
+    cursor: pointer 

@@ -1,0 +1,44 @@
+.menu 
+  background-color: rgb(35, 35, 36)
+  display: flex
+  align-items: center
+  height: 8vh
+  .main
+    flex: 1
+    flex-basis: 3rem
+  .canClick
+    margin-left: 0.8rem
+  .canClick:hover
+    cursor: pointer
+  .inputArea
+    min-width: 200px
+  .categorys
+    width: 5rem
+  .arco-input-group-addafter
+    background-color: rgb(35, 35, 36)
+  .itemBtn
+    color: $color-white
+    background-color: black
+    border: none
+    margin: 0 0.05rem
+    position: relative
+  .itemBtn:hover
+    cursor: pointer 
+    color: $color-dark-3
+  //   content: ""
+  //   position: absolute
+  //   top: 0.3rem
+  //   left: 1rem
+  //   width: 0.25rem
+  //   height: 0.02rem
+  //   min-width: 0.25rem
+  //   min-height: 0.02rem
+  //   background-color: #fff
+@media screen and (max-width: 380px) 
+  .menu .writen 
+    display: hidden  
+  .menu .categorys
+    display: none 
+// @media screen and (max-width: 1140px) 
+//   .menu .categorys
+//     display: none 

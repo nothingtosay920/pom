@@ -1,19 +1,72 @@
 .warpper
-  background-color: $color-gray
-  padding: 0.2rem 0 0.2rem 1rem
+  padding: 0.2rem 0.1rem 0.2rem 1rem
   display: flex
-    // width: 60%
-  .markdown
-    background-color: $color-white
-    flex-direction: column
+  align-items: flex-start
+  background-color: $color-gray
+  .main
     flex: 1
+    flex-direction: column
     padding: 0.2rem
+    background-color: #fff
+    .markdown
+      display: flex
+      flex-direction: column
+    .articleTitle
+      font-weight: bolder
+      font-size: 0.25rem
   .panelAffix
     position: absolute
     left: 0.5rem
     transform: translateZ()      
     flex-grow: 0
-  .asider
-    margin:0 1rem 0 0.1rem
-    width: 2rem
-    background-color: $color-white
+  .asiderWrapper
+    display: block
+    .asider
+      // float: right
+      width: 2rem
+      margin: 0 10px
+      // height: 84vh
+      background-color: $color-gray
+      .asiderHeadWrapper
+        border-radius: 20px!important
+        overflow: hidden
+        .asiderHead
+          padding: 10px
+          display: flex
+          background-color: #fff
+          .userImg
+            width: 40px
+            height: 30px
+          .userName
+            font-size: 13px
+        .btnPanel
+          background-color: #fff
+          display: flex
+          justify-content: flex-end
+          .follow
+            margin: 0 20px 10px 20px
+    .catelogue
+      margin: 0 10px 0 10px
+      width: 1.9rem
+      position: fixed
+      transition: all 0.2s ease-out
+      border-radius: 20px
+      padding: 10px
+      background-color: #fff
+.ngArticle
+  width: 1.2rem
+  height: 80vh
+  display: flex
+  background-color: $color-gray
+  align-items: center
+  position: sticky
+  top: 10vh
+  .panel
+    flex: 1
+    @include panel()
+.ngArticle:hover
+  background-color: $color-dark-3
+  cursor: pointer
+  .panel
+    flex: 1
+    @include panel()

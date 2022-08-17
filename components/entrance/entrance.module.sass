@@ -1,0 +1,35 @@
+@mixin panelbg($color)
+  border-radius: 50%
+  background-color: $color
+  display: flex
+  align-items: center
+  justify-content: center
+  width: 0.5rem
+  height: 0.5rem
+  cursor: pointer
+.creatorEntrance
+  background-color: #fff
+  margin: 0.1rem
+  padding: 0.1rem
+  width: 2rem
+  height: 2rem
+  .wrapper
+    display: inline-block
+    text-align: center
+    display: flex
+    justify-content: center
+    flex-direction: column
+    align-items: center
+    font-weight: 600
+  .musterBg
+    @include panelbg($color: $color-blue-2)
+  .gatherBg
+    @include panelbg($color: $color-orange)
+  .draftBg
+    @include panelbg($color: $color-green)
+  .editBg
+    @include panelbg($color: $color-orange-1)
+  .panel
+    @include panel-small()
+
+    

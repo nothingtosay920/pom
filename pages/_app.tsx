@@ -1,19 +1,34 @@
 import '../styles/globals.css'
-import type { AppProps } from 'next/app'
+import type { AppProps, AppPropsWithLayout } from 'next/app'
 import 'md-editor-rt/lib/style.css';
 import "@arco-design/web-react/dist/css/arco.css";
 import {QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from "react-query/devtools";
 import Head from 'next/head';
-
+import 'markdown-navbar/dist/navbar.css';
+import { ReactElement } from 'react-markdown/lib/react-markdown';
+import React, { useContext, useEffect, useState } from 'react';
+import { Provider } from 'react-redux';
+import store from '../store';
+import Loding from '../components/loading';
+import NextBrowserRouter from '../router/NextBrowserRouter';
+import { Link } from 'react-router-dom';
+import App from 'next/app';
+import NextLink from 'next/link'
+import AboutUs from '../views/about';
+import TestUs from './test';
 
 const queryClient = new QueryClient()
 
-function MyApp({ Component, pageProps }: AppProps) {
 
-  if (typeof window !== 'undefined') {
+function MyApp({ Component, pageProps, router }: AppPropsWithLayout ) {
+  const getLayout = Component.getLayout || ((page: ReactElement) => page)
+
+  useEffect(() => {
     require('../node_modules/amfe-flexible/index')
-  }
+    require('../public/svg')
+  }, [])
+  
 
   return ( 
   <>
@@ -21,11 +36,36 @@ function MyApp({ Component, pageProps }: AppProps) {
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
     </Head>
     <QueryClientProvider client={queryClient} >
-      <Component {...pageProps} />
+      <NextBrowserRouter asPath={router.asPath}>
+				<Provider store={store}>
+						{getLayout(<Component {...pageProps}></Component>)}
+
+				</Provider>
+      </NextBrowserRouter>
+
       {/* <ReactQueryDevtools initialIsOpen /> */}
     </QueryClientProvider>
+
+
   </>
   )  
 }
 
+
+
+
 export default MyApp
+
+
+// export default class CustomApp extends App<AppProps> {
+// 	render() {
+// 		const { Component, pageProps } = this.props
+// 		return (
+// 			<NextBrowserRouter asPath={this.props.router.asPath}>
+//         {/* <Component {...pageProps} /> */}
+
+// 				<Navigation />
+// 			</NextBrowserRouter>
+// 		)
+// 	}
+// }
