@@ -1,58 +1,84 @@
 .warpper
-  padding: 0.2rem 0.1rem 0.2rem 1rem
+  padding: 0.2rem 0.4rem 0.2rem 1.2rem
   display: flex
   align-items: flex-start
-  background-color: $color-gray
+  background-color: $color-gray 
   .main
-    flex: 1
+    width: 6.2rem
     flex-direction: column
     padding: 0.2rem
     background-color: #fff
+    position: relative
     .markdown
       display: flex
       flex-direction: column
     .articleTitle
       font-weight: bolder
       font-size: 0.25rem
+    .article_img
+      width: 100% 
+      height: 3rem
+      position: relative
+  .NavBtn
+    position: fixed
+    top: 50%
+    left: 7.1rem
   .panelAffix
     position: absolute
-    left: 0.5rem
+    right: 8.6rem
     transform: translateZ()      
     flex-grow: 0
+    width: 100px
   .asiderWrapper
     display: block
     .asider
       // float: right
       width: 2rem
-      margin: 0 10px
+      margin-left: 0.6rem
       // height: 84vh
       background-color: $color-gray
       .asiderHeadWrapper
         border-radius: 20px!important
         overflow: hidden
+        background-color: #fff
         .asiderHead
           padding: 10px
           display: flex
-          background-color: #fff
-          .userImg
-            width: 40px
-            height: 30px
+          .asiderImage
+            width: 60px
+            height: 60px
+            margin-right: 10px
+            position: relative
+            cursor: pointer
           .userName
             font-size: 13px
         .btnPanel
-          background-color: #fff
           display: flex
           justify-content: flex-end
+          border-top: 1px solid $color-dark-2
+          width: 80%
+          margin: 0 auto
           .follow
-            margin: 0 20px 10px 20px
-    .catelogue
-      margin: 0 10px 0 10px
+            margin: 10px 20px 10px 30px
+    .catelogue 
       width: 1.9rem
-      position: fixed
-      transition: all 0.2s ease-out
       border-radius: 20px
-      padding: 10px
+      padding: 5px
       background-color: #fff
+      transition: top .1s ease-in-out
+      display: block
+      will-change: scroll-position
+      margin-top: 20px
+      margin-left: 0.6rem
+      
+    .fixedCatelogue
+      width: 1.9rem
+      border-radius: 20px
+      padding: 5px
+      background-color: #fff
+      position: fixed
+      top: 20px
+      margin-left: 0.6rem
 .ngArticle
   width: 1.2rem
   height: 80vh
@@ -70,3 +96,19 @@
   .panel
     flex: 1
     @include panel()
+
+@media screen and (max-width: 1100px) 
+  .warpper
+    padding-left: 0
+    .main
+      flex: 1
+    .panelAffix
+      display: none
+
+@media screen and (max-width: 1000px) 
+  .warpper
+    .asiderWrapper
+      display: none
+    .main
+      .article_img
+        height: 5rem

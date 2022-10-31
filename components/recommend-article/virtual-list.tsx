@@ -1,32 +1,55 @@
-import { Avatar, Image, List, Space } from "@arco-design/web-react"
-import AvatarComponent from "@arco-design/web-react/es/Avatar"
 import React, { useEffect, useMemo, useRef, useState } from "react"
+import { FetchNextPageOptions, InfiniteQueryObserverResult } from "react-query"
 import { useVirtual } from "react-virtual"
-import { Articles } from "../../api/interface/types"
+import { AutoSizer, Index, IndexRange, InfiniteLoader, InfiniteLoaderProps, List, ListRowProps, WindowScroller } from "react-virtualized"
+import { ArticleType } from "../../api/interface/types"
 import Entry from "../entry/entry"
-import style from './virtual-list.module.sass'
+import styles from './virtual-list.module.sass'
 
 type RecomVirtualListType = {
-  data: Articles[]
+  data: ArticleType[],
+  fetchNextPage: (options?: FetchNextPageOptions | undefined) => Promise<InfiniteQueryObserverResult<{
+    data: ArticleType[];
+    next: number;
+  }, unknown>>
 }
 
 
-const RecomVirtualList: React.FunctionComponent<RecomVirtualListType> = (props) => {
+const RecomVirtualList: React.FunctionComponent<RecomVirtualListType> = ({data, fetchNextPage}) => {
 
-  return (
-    <List
-    className={style.list}
-    dataSource={props.data}
-    
-    render={(item, index) => (
-      <List.Item key={index} className={style.listItem}>
-        {/* {useMemo(() => <Entry item={item} />, [])} */}
-        <Entry item={item} />
-      </List.Item>
-    )}
-  />
+  const RecordsComponent = ({index}: {index: number}) => (
+    <div role={'row'} key={data[index].outer_id} className={styles.listItem}>
+      <Entry item={data[index]}></Entry>
+    </div>
   )
 
+  const loadMore = (params: {
+      scrollLeft: number;
+      scrollTop: number;
+  }) => {
+      if (document.body.scrollHeight - params.scrollTop - document.body.clientHeight < 250) {
+        fetchNextPage()
+      }
+  }
+
+  return (
+    <WindowScroller 
+      onScroll={loadMore}
+    >
+      {({ height, isScrolling, onChildScroll, scrollTop }) => (
+        <List
+          autoHeight
+          rowCount={data.length}
+          height={height}
+          isScrolling={isScrolling}
+          rowHeight={150}
+          rowRenderer={RecordsComponent}
+          width={740}
+        />
+      )}
+    </WindowScroller>
+
+    )
 } 
 
 export default RecomVirtualList

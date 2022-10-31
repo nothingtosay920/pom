@@ -1,52 +1,36 @@
-import { Button, Drawer, Empty, Form, Image, Input, List, Message, Modal, Notification, Radio, Select, Space, Spin, Upload } from '@arco-design/web-react';
+import { Button, Divider, Drawer, Empty, Form, Image, Input, List, Message, Modal, Notification, Radio, Select, Space, Spin, Tooltip, Upload } from '@arco-design/web-react';
 import Editor from 'md-editor-rt';
 import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import style from '../../styles/Writing.module.sass';
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
-import { GetArticle, GetBaseMusterInfo, GetCategorys, GetLabels, GetWritingArticleById, SavedGatherArticle, SavedMusterArticle, WritingArticleApi } from '../../api/interface/api';
+import { GetArticle, GetCategorys, GetLabels, GetMusterArticles, GetWritingArticleById } from '../../api/interface/api';
 import { UploadItem } from '@arco-design/web-react/es/Upload';
-import { appendImg, getImg } from '../../utills/fetch';
-import { AddArticleRes, Articles, Category, getCategorysRes, getLabelsRes, LabelMapType, Labels } from '../../api/interface/types';
+import { PostImgToAliyun, getImg } from '../../utills/fetch';
+import { ArticleClassType, Category, getCategorysRes, getLabelsRes, LabelMapType, Labels } from '../../api/interface/types';
 import Router, { useRouter } from 'next/router';
 import Login from '../../components/menu/login';
 import { useMutation } from 'react-query';
 import graphqlClient from '../../api/GqlClient';
-import { submitGatherMutation, submitMusterMutation } from '../../api/gql/gql';
+import { saveGatherMutation, submitGatherMutation } from '../../api/gql/gql';
+import { nanoid } from 'nanoid';
+import { IconDelete } from '@arco-design/web-react/icon';
+import { getNowTime } from '../../utills/utill';
 
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
 const Option = Select.Option;
 const TextArea = Input.TextArea;
 
-export type muster = {
-  article:string,
-  title: string,
-  type: string,
-  categorys: string,
-  description: string,
-  article_img: string,
-  labels: string[],
-  muster: string,
-  id: string
+type articleDataType = {
+  gather: GatheInputrType,
+  column: GatheInputrType
 }
 
-export type gather = {
-  article_data: {
-    article:string,
-    title: string,
-    type: string,
-    article_img: string,
-  }[],
-  labels: string[],
-  categorys: string,
-  description: string,
-  type: string,
-  gather_id: string,
-  gather_article_id: string
-}
-
-interface UserArticleProps {
-  article: gather | muster
+type ArticleToolProps = {
+  articleData: articleDataType,
+  setArticleData: React.Dispatch<React.SetStateAction<articleDataType>>,
+  foucs: number,
+  setfoucs: React.Dispatch<React.SetStateAction<number>>
 }
 
 type SubmitDataType = {
@@ -56,50 +40,85 @@ type SubmitDataType = {
   description: string | undefined
 }
 
-type ArticleTool = {
-  gather: gather,
-  setgather: React.Dispatch<React.SetStateAction<gather>>,
-  foucs: number,
-  setfoucs: React.Dispatch<React.SetStateAction<number>>
+type ArticleType = {
+  title: string,
+  outer_id: string,
+  article: string,
+  description: string,
+  article_img: string,
+  edit_time: string,
+}
+
+type GatheInputrType = {
+  article_data: ArticleType[],
+  article_description: string,
+  type: ArticleClassType,
+  gather_id: string,
+  gather_name: string,
+  gather_img: string,
+  category: string,
+  labels: string[],
+}
+
+export const defaultArticle: ArticleType = {
+  title: '',
+  outer_id: nanoid(),
+  article: '',
+  description: '这是一个专栏文章',
+  article_img: '',
+  edit_time: getNowTime(),
+}
+
+export const defaultColumn = {
+  article_data: [{...defaultArticle}],
+  article_description: '',
+  type: 'COLUMN' as ArticleClassType,
+  gather_id: '',
+  gather_name: '',
+  gather_img: '',
+  category: '',
+  labels: [],
 }
 
 export const defaultGather = {
-  article_data: [{
-    article: '',
-    title: '',
-    type: 'GATHER',
-    article_img: ''
-  }],
-  categorys: '',
+  article_data: [{...defaultArticle}],
+  article_description: '这是一个聚合文章',
+  type: 'GATHER' as ArticleClassType,
+  gather_id: nanoid(),
+  gather_name: '',
+  gather_img: '',
+  category: '',
   labels: [],
-  description: '这是一个聚合文章',
-  type: 'GATHER',
-  gather_id: '',
-  gather_article_id: ''
 }
-export const defaultMuster = {
-  article: '',
-  title: '',
-  type: 'MUSTER',
-  categorys: '',
-  labels: [],
-  article_img: '',
-  description: '这是一个专栏文章',
-  muster: '',
-  id: ''
- }
 
-const reorder = (list: Pick<gather, 'article_data'>, startIndex: number, endIndex: number) => {
+
+const reorder = (list: Pick<GatheInputrType, 'article_data'>, startIndex: number, endIndex: number) => {
   const result = Array.from(list.article_data);
   const [removed] = result.splice(startIndex, 1);
   result.splice(endIndex, 0, removed);
   return result;
 };
 
+const reorderWithImg = (list: Pick<GatheInputrType, 'article_data'>, startIndex: number, endIndex: number) => {
+  const result = Array.from(list.article_data);
+  const value = result[startIndex].article_img
+  result[startIndex].article_img = result[endIndex].article_img 
+  result[endIndex].article_img = value
+  return result
+}
+
+const reorderFileList = (fileList: UploadItem[], startIndex: number, endIndex: number) => {
+  const result = Array.from(fileList)
+  const value = result[startIndex]
+  result[startIndex] = result[endIndex]
+  result[endIndex] = value
+  return result
+}
+
 const getListStyle = (isDraggingOver:boolean) => ({
   background: isDraggingOver ? "#E5E6EB" : "#F2F3F5",
   width: 150,
-  height: '550'
+  height: '550',
 })
 
 const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
@@ -112,21 +131,36 @@ const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
 
 
 
+const getImgItemStyle = (isDragging: boolean, draggableStyle: any) => ({
+  // some basic styles to make the items look a bit nicer
+  userSelect: "none",
+  margin: `10px 0`,
+  // styles we need to apply on draggables
+  ...draggableStyle
+});
 
-const ArticleTool: React.FC<ArticleTool> = ({gather, setgather, foucs, setfoucs}) => {
+const getImgListStyle = (isDraggingOver:boolean) => ({
+  background: isDraggingOver ? "#E5E6EB" : "#F2F3F5",
+  width: 280,
+  height: '550',
+  fontSize: '12px'
+})
+
+
+const ArticleTool: React.FC<ArticleToolProps> = ({articleData, setArticleData, foucs, setfoucs}) => {
 
   const addArticle = () => {
-    setgather((state) => {
-      state.article_data.push(defaultGather.article_data[0])
+    setArticleData((state) => {
+      state.gather.article_data.push({...defaultArticle, outer_id: nanoid()})
       return {...state}
     })
     
   }
 
   const removeArticle = () => {
-   if (gather.article_data.length > 1) {
-    setgather((state) => {
-        state.article_data.splice(foucs, 1)
+   if (articleData.gather.article_data.length > 1) {
+    setArticleData((state) => {
+        state.gather.article_data.splice(foucs, 1)
         return {...state}
     })
     setfoucs(0)
@@ -151,128 +185,83 @@ const ArticleTool: React.FC<ArticleTool> = ({gather, setgather, foucs, setfoucs}
 
 const Tool = React.memo(ArticleTool)
 
-// 此函数在构建时被调用
-// export const getStaticProps: GetStaticProps = async (context) => {
-//   // 调用外部 API 获取博文列表
-//   if (context.params === undefined || context.params.articleId === undefined) {
-//     return {
-//       notFound: true
-//     }
-//   } else {
-//     const article  = await GetWritingArticleById(context.params?.articleId as string)
-//     const categorysList = await GetCategorys()
-//     const labeslist = await GetLabels()
-//       if (!article) {
-//         return {
-//           notFound: true
-//         }
-//       }
-//     return {
-//       props: {
-//         categorysList,
-//         labeslist,
-//         article
-//       }
-//     }
-//   }
-
- 
-// }
-
-// export async function getStaticPaths() {
-
-  
-//   const data = await WritingArticleApi(value.get())
-//   const paths: any[] = []
-//   const aritlces = [...data.getWritingArticle.gather_data, ...data.getWritingArticle.muster_data]
-//   aritlces.forEach((item) => {
-//     item.article_data.map((i) => {
-//       paths.push({
-//         params: {
-//           articleId: '/writing/' + i.outer_id
-//         }
-//       })
-//     })
-//   })
-//   // const paths = users.map((user) => ({
-//   //   params: { id: user.id.toString() },
-//   // }))
-
-//   return { paths, fallback: true }
-// }
-
-
-
-export function UserArticleComponent({article}: UserArticleProps) {
+export function UserArticleComponent({article}: {article: GatheInputrType}) {
   const {data: categorysList } = GetCategorys()
   const {data: labeslist} =  GetLabels()
-  const {data: MusterInfo} = GetBaseMusterInfo()
+  const {data: MusterInfo} = GetMusterArticles()
   const router = useRouter()
 
   const [foucs, setfoucs] = useState(0)
   const [isGather, setisGather] = useState(article.type === 'GATHER' ? true : false)
   const [showDrawer, setshowDrawer] = useState(false)
 
-  const [gather, setgather] = useState<gather>(isGather? article as gather : defaultGather)
-  const [muster, setmuster] = useState<muster>(isGather? defaultMuster: article as muster)
+  const [articleData, setArticleData] = useState({
+    gather: article.type === 'GATHER' ? {...article} : defaultGather,
+    column: article.type === 'GATHER' ? defaultColumn : {...article}
+  })
   
-  const imgFiles = useRef<UploadItem[] | undefined>(undefined)
+  const [imgFiles, setImgFiles] = useState<UploadItem[]>([])
+  const [columnId, setColumnId] = useState('')
 
 
-  function SubmitMusterArticle(data: muster) {
-    return useMutation<AddArticleRes>(
-    async () => {
-      return await graphqlClient.request(submitMusterMutation, {
-        description: data.description,
-        article: data.article,
-        category: data.categorys,
-        labels: data.labels.map((item) => ({label: item})),
-        title: data.title,
-        articleImg: data.article_img,
-        muster_id: data.muster,
-        muster_article_id: data.id
-      }).then((res) => {
-        return res.addMuster
-      })
-    }, {
-      onSuccess: (data) => {
-        router.push('/article/' + data.article_id)
-      }
-    }
-  )
-  }
-
-  function SubmitGatherArticle(data: gather) {
-    return useMutation<AddArticleRes>(
+  function SubmitGatherArticle(data: GatheInputrType) {
+    return useMutation<void>(
       async () => {
         return await graphqlClient.request(submitGatherMutation, {
-          labels: data.labels.map((item) => ({label: item})),
-          category: data.categorys,
-          aritcle_data: data.article_data,
-          gather_article_id: data.gather_article_id,
-          gather_id: data.gather_id
+          labels: data.labels,
+          category: data.category,
+          article_data: data.article_data,
+          gather_id: data.gather_id,
+          gather_name: data.gather_name,
+          article_type: data.type,
+          article_description: data.article_description,
+          gather_img: data.gather_img,
         }).then((res) => res)
       }, {
-        onSuccess: (data) => {
-          router.push('/article/' + data.article_id)
+        onSuccess: () => {
+          if (isGather) {
+            router.replace('/article/' + articleData.gather.article_data[0].outer_id)
+          } else {
+            router.replace('/article/' + articleData.column.article_data[0].outer_id)
+          }
         }
       }
     )
   }
 
-  const SubmitMusterMutation = SubmitMusterArticle(muster)
-  const savedMusterMutation = SavedMusterArticle(muster)
-  const SubmitGatherMutation = SubmitGatherArticle(gather)
-  const savedGatherMutation = SavedGatherArticle(gather)
-
-  useEffect( () => {
-    (async () => {
-      if (muster.article_img && !isGather) {
-        imgFiles.current = [await getImg() as UploadItem]
+  function SavedGatherArticle(data: GatheInputrType) {
+    return useMutation<void>(
+      async () => {
+        return await graphqlClient.request(saveGatherMutation, {
+          labels: data.labels,
+          category: data.category,
+          article_data: data.article_data,
+          gather_id: data.gather_id,
+          gather_name: data.gather_name,
+          article_type: data.type,
+          article_description: data.article_description,
+          gather_img: data.gather_img,
+        }).then()
       }
-    })()
+    )
+  }
+
+  const SubmitGatherMutation = SubmitGatherArticle(isGather ? articleData.gather : articleData.column)
+  const savedGatherMutation = SavedGatherArticle(isGather ? articleData.gather : articleData.column)
+
+  // useEffect( () => {
+  //   (async () => {
+  //     if (articleData.gather_img && !isGather && !imgFiles) {
+  //       const img = await getImg() as UploadItem
+
+  //       setImgFiles((state) => {
+  //         state = [img]
+  //         return {...state}
+  //       })
+  //     }
+  //   })()
  
-  })
+  // }, [])
 
   if (!article) {
     return <Spin></Spin>
@@ -282,25 +271,41 @@ export function UserArticleComponent({article}: UserArticleProps) {
 
   const onDragend = (result: DropResult) => {
     if(!result.destination) return
-    const newdata = reorder(gather, result.source.index, result.destination.index)
-    setgather((state) => {
-      state.article_data = newdata
+    const newdata = reorder(articleData.gather, result.source.index, result.destination.index)
+    setArticleData((state) => {
+      state.gather.article_data = newdata
       return state
     })
     setfoucs(result.destination.index)
+  }
+
+  // img draged
+  const onImgDragend = (result: DropResult) => {
+    
+    if(!result.destination) return
+
+    const newdata = reorderWithImg(articleData.gather, result.source.index, result.destination.index)
+    const imgList = reorderFileList(imgFiles, result.source.index, result.destination.index)
+    setArticleData((state) => {
+      state.gather.article_data = newdata
+      return state
+    })
+    setImgFiles(imgList)
+    setfoucs(result.destination.index)
+
   }
 
   const changeMod = () => setisGather((state) => !state) 
 
   const textChange = (text: string) => {
     if (isGather) {
-      setgather((state) => {
-        state.article_data[foucs].article = text
+      setArticleData((state) => {
+        state.gather.article_data[foucs].article = text
         return {...state}
       })
     } else {
-      setmuster((state) => {
-        state.article = text
+      setArticleData((state) => {
+        state.column.article_data[0].article = text
         return {...state}
       })
     }
@@ -308,13 +313,13 @@ export function UserArticleComponent({article}: UserArticleProps) {
 
   const setInput = (value: string) => {
     if (isGather) {
-      setgather((state) => {
-        state.article_data[foucs].title = value
+      setArticleData((state) => {
+        state.gather.article_data[foucs].title = value
         return {...state}
       })
     } else {
-      setmuster((state) => {
-        state.title = value
+      setArticleData((state) => {
+        state.column.article_data[0].title = value
         return {...state}
       })
     }
@@ -322,51 +327,47 @@ export function UserArticleComponent({article}: UserArticleProps) {
 
   const saveArticle = async () => {
     if (isGather) {
-      console.log(gather);
-      
+      setArticleData((state) => {
+        state.gather.type === 'GATHER'
+        return {...state}
+      })
+    } else {
+      if (!articleData.column.gather_id) {
+        setArticleData((state) => {
+          state.column.type = 'SINGLE'
+          state.column.gather_id = nanoid()
+          return {...state}
+        })
+      }
+    }
       await savedGatherMutation.mutateAsync()
       if (savedGatherMutation.isSuccess) {
         Message.success({content: "保存成功"})
       } else if (savedGatherMutation.error) {
         Message.error({content: "发生错误"})
       }
-    } else {
-      console.log(muster);
-      
-      await savedMusterMutation.mutateAsync()
-      if (savedMusterMutation.isSuccess) {
-        Message.success({content: "保存成功"})
-      } else if (savedMusterMutation.error) {
-        Message.error({content: "发生错误"})
-      }
-    }
   }
 
   const submitAritlce = async () => {
     if (isGather) {
-      const article_id = await SubmitGatherMutation.mutateAsync()
-      console.log(article_id);
-      
-      if (SubmitGatherMutation.isSuccess) {
-        Message.success({content: "保存成功"})
-        // setshowDrawer(false)
-        // router.push('/writing/' )
-
-      } else if (SubmitGatherMutation.error) {
-        Message.error({content: "发生错误"})
-      }
+      setArticleData((state) => {
+        state.gather.type = 'GATHER'
+        return {...state}
+      })
     } else {
-      await SubmitMusterMutation.mutateAsync()
-      
-      setshowDrawer(false)
-      if (SubmitMusterMutation.isSuccess) {
-        Message.success({content: "保存成功"})
-        // setshowDrawer(false)
-        router.push('/article/' + SubmitMusterMutation.data.article_id)
-      } else if (SubmitMusterMutation.error) {
-        
-        Message.error({content: "发生错误"})
+      if (!articleData.column.gather_id) {
+        setArticleData((state) => {
+          state.column.type = 'SINGLE'
+          state.column.gather_id = nanoid()
+          return {...state}
+        })
       }
+    }
+    await SubmitGatherMutation.mutateAsync()
+    if (SubmitGatherMutation.isSuccess) {
+      Message.success({content: "保存成功"})
+    } else if (SubmitGatherMutation.error) {
+      Message.error({content: "发生错误"})
     }
   }
 
@@ -380,7 +381,7 @@ export function UserArticleComponent({article}: UserArticleProps) {
           placeholder={isGather ? '请添加单一小节标题(小节标题可选, 添加总标题点击发布栏)' : '请输入标题内容'}
           maxLength={20}
           showWordLimit
-          value={isGather ? gather.article_data[foucs].title : muster.title}
+          value={isGather ? articleData.gather.article_data[foucs].title : articleData.column.article_data[0].title}
           onChange={setInput}
         />
         <div>
@@ -394,7 +395,7 @@ export function UserArticleComponent({article}: UserArticleProps) {
         {
           isGather ? <div className={style.catalogue} onClick={(e) => {
           }}>
-            <Tool gather={gather} setgather={setgather} foucs={foucs} setfoucs={setfoucs} />  
+            <Tool articleData={articleData} setArticleData={setArticleData} foucs={foucs} setfoucs={setfoucs} />  
             <DragDropContext onDragEnd={onDragend}>
               <Droppable droppableId="droppable">
                 {
@@ -404,19 +405,21 @@ export function UserArticleComponent({article}: UserArticleProps) {
                       ref={provided.innerRef}
                       style={getListStyle(snapshot.isDraggingOver)} 
                       >
-                        {gather.article_data.map((item, index) => (
+                        {articleData.gather.article_data.map((item, index) => (
                           <Draggable key={index} draggableId={String(index)} index={index}>
                             {(provided, snapshot) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                style={getItemStyle(
+                                style={getImgItemStyle(
                                   snapshot.isDragging,
                                   provided.draggableProps.style
                                 )}
                               >
-                                <div onClick={() => {setfoucs(index)}} className={foucs === index ? style.listBtnActive : style.listBtn}>
+                                <div onClick={() => {
+                                  setfoucs(index)
+                                }} className={foucs === index ? style.listBtnActive : style.listBtn}>
                                   {index+1} 
                                 </div>
                               </div>
@@ -433,7 +436,7 @@ export function UserArticleComponent({article}: UserArticleProps) {
         }
         <Editor 
         
-          modelValue={isGather? gather.article_data[foucs].article : muster.article} 
+          modelValue={isGather? articleData.gather.article_data[foucs].article : articleData.column.article_data[0].article} 
           onChange={textChange}
           toolbars={[
             'bold', 'underline', 'italic', '-', 'strikeThrough', 'sub', 'sup', 'quote', 'unorderedList',
@@ -455,24 +458,21 @@ export function UserArticleComponent({article}: UserArticleProps) {
         setshowDrawer(false);
       }}
     >
-          <Form 
-            size='large'
-            // labelCol={{span: 6}}
-            >
+          <Form>
             <FormItem label='选择分类'>
               <RadioGroup
                 type='button'
                 name='lang'
-                value={isGather ? gather.categorys : muster.categorys}
+                value={isGather ? articleData.gather.category : articleData.column.category}
                 onChange={(value) => {
                   if (isGather) {
-                    setgather((state) => {
-                      state.categorys = value
+                    setArticleData((state) => {
+                      state.gather.category = value
                       return {...state}
                     })
                   } else {
-                    setmuster((state) => {
-                      state.categorys = value
+                    setArticleData((state) => {
+                      state.column.category = value
                       return {...state}
                     })
                   }
@@ -495,16 +495,16 @@ export function UserArticleComponent({article}: UserArticleProps) {
               <Select                                                                                                                               
                 style={{ width: 250}}
                 mode='multiple'
-                value={isGather? gather.labels : muster.labels}
+                value={isGather? articleData.gather.labels : articleData.column.labels}
                 onChange={(value: string[]) => {
                   if (isGather) {
-                    setgather((state) => {
-                      state.labels = value
+                    setArticleData((state) => {
+                      state.gather.labels = value
                       return {...state}
                     })
                   } else {
-                    setmuster((state) => {
-                      state.labels = value
+                    setArticleData((state) => {
+                      state.column.labels = value
                       return {...state}
                     })
                   }
@@ -514,8 +514,8 @@ export function UserArticleComponent({article}: UserArticleProps) {
                   <Option 
                     defaultChecked={
                       isGather ? 
-                        gather.labels.findIndex((item) => item === option.label_id) !== -1 :
-                        muster.labels.findIndex((item) => item === option.label_id) !== -1
+                        articleData.gather.labels.findIndex((item) => item === option.label_id) !== -1 :
+                        articleData.column.labels.findIndex((item) => item === option.label_id) !== -1
                     } 
                     key={option.label_id} 
                     value={option.label_id}>
@@ -524,6 +524,20 @@ export function UserArticleComponent({article}: UserArticleProps) {
                   )) 
                 }
               </Select>
+            </FormItem>
+
+            <FormItem style={{'display': isGather ? 'flex' : 'none'}} label={'聚合标题'}>
+              <Input
+                maxLength={7}
+                showWordLimit
+                placeholder='请输入聚合文章的标题'
+                style={{ width: 250 }}
+                value={articleData.gather.gather_name}
+                onChange={(value) => setArticleData((state) => {
+                  state.gather.gather_name = value
+                  return {...state}
+                })}
+              />
             </FormItem>
             <FormItem label={'添加封面'}>
               <Upload
@@ -535,7 +549,8 @@ export function UserArticleComponent({article}: UserArticleProps) {
                   showText: true,
                   width: '100%'
                 }}
-                defaultFileList={isGather ? undefined : imgFiles.current}
+                defaultFileList={imgFiles}
+                // 拖拽展示
                 onPreview={file => {
                   Modal.info({
                     title: '预览',
@@ -545,21 +560,27 @@ export function UserArticleComponent({article}: UserArticleProps) {
                   })
                 }}
                 onChange={async (fileList: UploadItem[]) => {
+
                   if (!fileList.length || fileList[0].status !== 'done') {
                     return
                   }
-                  const imgUrl = await appendImg(fileList[0])
+                  let imgUrl: string | undefined = undefined
+                  if (isGather) {
+                    imgUrl = await PostImgToAliyun(fileList[0], articleData.gather.gather_id)
+                  } else {
+                    imgUrl = await PostImgToAliyun(fileList[0], articleData.column.gather_id)
+                  }
+
                   if (imgUrl) {
+                    
                     if (isGather) {
-                      setgather((state) => {
-                        state.article_data[foucs].article_img = imgUrl
+                      setArticleData((state) => {
+                        state.gather.gather_img = imgUrl as string
                         return {...state}
                       })
                     } else {
-                      
-                      setmuster((state) => {
-                        state.article_img = imgUrl
-                        imgFiles.current = [fileList[0]]
+                      setArticleData((state) => {
+                        state.column.article_data[0].article_img  = imgUrl as string
                         return {...state}
                       })
                     }
@@ -568,6 +589,136 @@ export function UserArticleComponent({article}: UserArticleProps) {
                 action='/'
                 accept='image/*'
                 listType='picture-card'
+              /> 
+            </FormItem>
+            <FormItem label={"聚合摘要"} style={{'display': isGather ? 'flex' : 'none'}}>
+              <TextArea
+                  placeholder='Please enter ...'
+                  style={{ minHeight: 80, width: 350 }}
+                  maxLength="100"
+                  showWordLimit 
+                  value={isGather ? articleData.gather.article_description : articleData.column.article_data[0].description}
+                  onChange={(value) => {
+                    if (isGather) {
+                      setArticleData((state) => {
+                        state.gather.article_description = value
+                        return {...state}
+                      })
+                    } else {
+                      setArticleData((state) => {
+                        state.column.article_data[0].description = value
+                        return {...state}
+                      })
+                    }
+                  }}
+                />
+            </FormItem>
+
+
+
+            <FormItem style={{'display': isGather ? 'flex' : 'none'}}>
+              <Divider style={{'margin': '0px'}} />
+            </FormItem>
+
+
+            <FormItem style={{'display': isGather ? 'flex' : 'none'}} label={"展示图"}>
+                <Upload
+                  limit={articleData.gather.article_data.length}
+                  progressProps={{
+                    size: 'small',
+                    type: 'line',
+                    showText: true,
+                    width: '100%'
+                  }}
+                  // defaultFileList={imgFiles[foucs]}
+                  // 拖拽展示
+                  renderUploadList ={(fileList, props) => (
+                    <DragDropContext onDragEnd={onImgDragend}>
+                      <Droppable droppableId="droppable">
+                        {
+                          (provided, snapshot) => (
+                            <div
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                              style={getImgListStyle(snapshot.isDraggingOver)} 
+                              
+                              >
+                                {fileList.map((item, index) => { 
+                                  
+                                  return <Draggable key={item.name} draggableId={String(index)} index={index}>
+                                    {(provided, snapshot) => {
+
+
+                                      return (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          style={getItemStyle(
+                                            snapshot.isDragging,
+                                            provided.draggableProps.style,
+                                          )}
+                                        >
+                                          <List.Item key={index} actions={[
+                                            <IconDelete 
+                                              key={'delete'} 
+                                              style={{'margin': '0 10px'}} 
+                                              onClick={() => {
+                                                if (props.onRemove) {
+                                                  props.onRemove(item)
+                                                  setArticleData((state) => {
+                                                    state.gather.article_data[index].article_img = ''
+                                                    return {...state}
+                                                  })
+                                                }
+                                              }}
+                                            />
+                                          ]}>
+                                            <List.Item.Meta
+                                              avatar={<Image width={50} height={50} src={articleData.gather.article_data[0].article_img} alt=""></Image>}
+                                              title={item.name}
+                                            />
+                                          </List.Item>
+                                            {/* {file.status === 'error' ? 
+                                              <Tooltip content="Upload Error">{originNode?.props?.children}</Tooltip>
+                                            : originNode} */}
+                                        </div>
+                                      )
+                                    }}
+                                  </Draggable>
+                                 } )}
+                                {provided.placeholder}  
+                            </div>
+                          )
+                        }
+                      </Droppable>
+                    </DragDropContext>
+                  )}
+                  onChange={async (fileList: UploadItem[], file: UploadItem) => {
+
+                    if (!fileList.length || file.status !== 'done') {
+                      return
+                    }
+                    const imgUrl = await PostImgToAliyun(fileList[fileList.length - 1], articleData.gather.gather_id + `/page/` + fileList.length)
+                    
+                    if (imgUrl) {
+                      setImgFiles(fileList)
+                      setArticleData((state) => {
+                        const index = state.gather.article_data.findIndex((item) => item.article_img === imgUrl)
+                        if (index === -1) {
+                          const len = state.gather.article_data.length
+                          state.gather.article_data[len - 1].article_img = imgUrl
+                        } else {
+                          state.gather.article_data.concat().splice(index).forEach((item, i) => {
+                            state.gather.article_data[index + i].article_img = item.article_img
+                          })
+                        }
+                        return {...state}
+                      })
+                    }
+                  }}
+                  action='/'
+                  accept='image/*'
                 />
             </FormItem>
             <FormItem 
@@ -575,11 +726,25 @@ export function UserArticleComponent({article}: UserArticleProps) {
               label={'收至专栏'}
               
             >
-               <Select allowCreate placeholder='选择一个专栏' allowClear style={{ width: 250 }}>
-                  {MusterInfo ? MusterInfo.muster_data.map((option) => (
+               <Select 
+                allowCreate 
+                placeholder='选择一个专栏' 
+                allowClear 
+                style={{ width: 250 }}
+                value={columnId}
+                onChange={(value) => {
+                  setArticleData((state) => {
+                    state.column.gather_id = value
+                    state.column.type = 'COLUMN'
+                    return {...state}
+                  })
+                  setColumnId(value)  
+                }}
+                >
+                  {(MusterInfo) ? MusterInfo.map((option) => (
                     
-                    <Option key={option.muster_id} value={option.muster_id}>
-                      {option.name}
+                    <Option key={option.gather_id} value={option.gather_id as string}>
+                      {option.gather_name}
                     </Option>
                   )) : <Empty description={<Button type='primary'>点击添加</Button>}></Empty>
                 }
@@ -591,17 +756,17 @@ export function UserArticleComponent({article}: UserArticleProps) {
                   style={{ minHeight: 80, width: 350 }}
                   maxLength="100"
                   showWordLimit 
-                  defaultValue={isGather ? gather.description : muster.description}
+                  value={isGather ? articleData.gather.article_data[foucs].description : articleData.column.article_data[0].description}
                   onChange={(value) => {
                     if (isGather) {
-                      setgather((state) => {
-                        state.description = value
-                        return state
+                      setArticleData((state) => {
+                        state.gather.article_data[foucs].description = value
+                        return {...state}
                       })
                     } else {
-                      setmuster((state) => {
-                        state.description = value
-                        return state
+                      setArticleData((state) => {
+                        state.column.article_data[0].description = value
+                        return {...state}
                       })
                     }
                   }}
@@ -613,29 +778,11 @@ export function UserArticleComponent({article}: UserArticleProps) {
   )
 }
 
-//  function UserArticleComponent({categorysList, labeslist, article}: UserArticleProps) {
-//   const [foucs, setfoucs] = useState(0)
-//   // const [isGather, setisGather] = useState(article.description === defaultMuster.description ? false : true)
-//   // const [gather, setgather] = useState<gather>(isGather? article as gather : defaultGather)
-//   // const [muster, setmuster] = useState<muster>(isGather? defaultMuster: article as muster)
-//   console.log(article);
-  
-//   return (
-//     <div>
-//       <div>123</div>
-//       {/* {
-//         article ? <>123</> : <><Spin></Spin></>
-//       } */}
-//     </div>
-//   )
-//   // return <>123</>
-//  }
-
  const UserEditor = () => {
   const router = useRouter()
 
-  if (router.query.articleId) {
-    const {data, isSuccess, isLoading} = GetWritingArticleById(router.query.articleId as string)
+  if (router.query.articleId?.length) {
+    const {data, isSuccess, isLoading} = GetWritingArticleById(router.query.articleId[0] as string)
 
 
     if (isLoading) {
@@ -651,7 +798,7 @@ export function UserArticleComponent({article}: UserArticleProps) {
       </>
     )    
   } else {
-    return <UserArticleComponent article={defaultMuster}></UserArticleComponent>
+    return <UserArticleComponent article={defaultColumn}></UserArticleComponent>
   }
 
 

@@ -4,15 +4,17 @@
   display: flex
   align-items: center
   justify-content: center
-  width: 0.5rem
-  height: 0.5rem
+  width: 0.35rem
+  height: 0.35rem
   cursor: pointer
+  margin-bottom: 10px
 .creatorEntrance
   background-color: #fff
-  margin: 0.1rem
+  margin: 20px 50px
   padding: 0.1rem
-  width: 2rem
-  height: 2rem
+  width: 300px
+  height: 300px
+  color: $color-dark-1
   .wrapper
     display: inline-block
     text-align: center
@@ -20,16 +22,54 @@
     justify-content: center
     flex-direction: column
     align-items: center
-    font-weight: 600
   .musterBg
+    @include panelbg($color: $color-blue-1)
+  .musterBg:hover
     @include panelbg($color: $color-blue-2)
+  // .musterBg:hover
   .gatherBg
-    @include panelbg($color: $color-orange)
+    @include panelbg($color: $color-orange-1)
+  .gatherBg:hover
+    @include panelbg($color: $color-orange)  
   .draftBg
     @include panelbg($color: $color-green)
-  .editBg
-    @include panelbg($color: $color-orange-1)
+  .draftBg:hover
+    @include panelbg($color: $color-green-1)
   .panel
     @include panel-small()
-
-    
+  .carousel
+    width: 300px
+    height: 120px
+    margin-top: 10px
+.infoImage
+  width: 300px
+  height: 200px
+.infosWrapper
+  display: flex
+  justify-content: space-between
+  width: 280px !important
+  position: absolute
+  top: 20%    
+  height: 100px!important
+  padding:0 10px
+  color: $color-dark-1
+  .info
+    display: flex
+    flex-direction: column
+    height: 50px
+    .value
+     font-weight: 600
+     font-size: 18px
+     margin: 10px auto
+.wrapperImg
+  width: 128px
+  height: 128px
+  position: relative
+  display: flex
+  left: 28%
+  top: 10%
+.strikTitle
+  text-align: center
+  font-weight: 900
+  font-size: 18
+  color: $color-blue-3

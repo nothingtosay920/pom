@@ -5,22 +5,24 @@ import style from './labels.module.sass'
 
 type PropsType = {
   label: {
-    Labels: {
-      name: string;
-      description: string;
-      label_id: string;
-    }
+    name: string;
+    description: string;
+    label_id: string;
   }[]
 }
 
 const LabelsComponent: FC<PropsType> = ({label}) => {
   
+  if (label && typeof label[0] === 'string' ) {
+    return <></>
+  }
+
   return (  
     <Space split={<Divider type='vertical' style={{'margin': '0'}} />}>
       {
         label.map((item) => {
-          return (<div key={item.Labels.label_id} className={style.wrapper}>
-            <div className={style.label}>{item.Labels.name}</div>
+          return (<div key={item.label_id} className={style.wrapper}>
+            <div className={style.label}>{item.name}</div>
           </div>)
         })
       }

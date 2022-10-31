@@ -3,18 +3,13 @@ import { gql } from "graphql-request"
 // 创建用户
 export const createUserMutaion = gql`
   mutation ($phone: String!) {
-    Login(phone: $phone ) {
-      message,
-      code 
-    }
+    Login(phone: $phone )
   }
 `
 
-export const logOut = gql`
+export const logOutGql = gql`
   mutation {
-    LogOut {
-      code
-    }
+    LogOut 
   }
 `
 
@@ -23,7 +18,7 @@ export const getUserQuery = gql`
 query {
 	getUserData {
       name
-      open_id
+      uuid
   }
 }
 `
@@ -31,70 +26,52 @@ query {
 
 
 // 增加文章
-export const submitMusterMutation = gql`
-  mutation (
-    $title: String!, 
-    $article: String!, 
-    $category: String!, 
-    $description: String!, 
-    $articleImg: String!, 
-    $labels: [LabelType!]!,
-    $muster_id: String!,
-    $muster_article_id: String!
-    ){
-      addMuster (data: {
-        article_data: {
-          title: $title,
-          article: $article,
-          description: $description,
-          articleImg: $articleImg
-        },
-        category: $category,
-        labels: $labels,
-        muster_id: $muster_id,
-        muster_article_id: $muster_article_id
-      }) {
-        article_id
-      }
-  } 
-`
-export const saveMusterMutation = gql`
-    mutation ($title: String!, $article: String!, $category: String!, $description: String!, $articleImg: String!, $labels: [LabelType!]!){
-      savedMuster (mArticle: {
-      article_data: {
-        title: $title,
-        article: $article,
-        description: $description,
-        articleImg: $articleImg
-      },
-      category: $category,
-      labels: $labels
-    }) 
-  } 
-`
 export const submitGatherMutation = gql`
-mutation($label: [LabelType!]!, $category: String!, $gather_id: String!, $gather_article_id: String!, $article_data: [GatherArticle!]!) {
-  addGather(data: {
-    label: $label,
-    category: $category,
-    gather_id: $gather_id,
-    gather_article_id: $gather_article_id
-    article_data: $article_data
-  }) {
-    article_id
-  }
+mutation(
+    $labels: [String!]!,
+    $category: String!, 
+    $gather_id: String!, 
+    $gather_name: String!, 
+    $article_data: [ArticleInput!]!, 
+    $article_type: String!,
+    $article_description: String!,
+    $gather_img: String!,
+  ) {
+    addArticle(data: {
+      labels: $labels,
+      category: $category,
+      gather_id: $gather_id,
+      article_data: $article_data,
+      gather_name: $gather_name,
+      article_type: $article_type,
+      article_description: $article_description,
+      gather_img: $gather_img,
+    })  
 }
 `
 export const saveGatherMutation = gql`
-mutation($label: [LabelType!]!, $category: String!, $gather_id: String!, $gather_article_id: String!, $article_data: [GatherArticle!]!) {
-  saveGather(data: {
-    label: $label,
-    category: $category,
-    gather_id: $gather_id,
-    gather_article_id: $gather_article_id
-    article_data: $article_data
-  })
-}
+mutation(
+    $labels: [String!]!,
+    $category: String!, 
+    $gather_id: String!, 
+    $gather_name: String!, 
+    $article_data: [ArticleInput!]!, 
+    $article_type: String!,
+    $article_description: String!, 
+    $gather_img: String!,
+  ) {
+    savedArticle(data: {
+      labels: $labels,
+        category: $category,
+        gather_id: $gather_id,
+        article_data: $article_data,
+        gather_name: $gather_name,
+        article_type: $article_type,
+        article_description: $article_description,
+        gather_img: $gather_img
+    })
+  }
+  
 `
 
 
@@ -126,86 +103,139 @@ export const getLabels = gql`
 }
 `
 
-// 获取最新文章
-export const getLatestArticles = gql`
-  query($labels: [LabelType!]!) {
-    recommendList(label: {
-      labels: $labels
-    }) {
-      author
-      muster
-      gather
-      title
-      description
-      hot
-      zan
-      article_img
-      outer_id
-      edit_time
-      labels 
-      categorys
-  }
-  }
+
+export const getRecommendList = gql`
+  query($label: String!, $page: Float!, $newest: String!) {
+    recommendList(label: $label, page: $page, newest: $newest) {
+      data {
+        author {
+          name
+          user_img
+          uuid
+        }
+        article_type
+        title
+        description
+        hot
+        zan {
+          authorId
+        }
+        article_img
+        outer_id
+        edit_time
+        labels {
+          name
+          label_id
+          description
+        }
+        categorys {
+          category_id
+          description
+        }
+      }
+      next
+    }
+  } 
 `
 
 export const getArticleById = gql`
-query ($Id: String!) {
-  getArticleById(article_id: $Id) {
-    author
+query ($Id: String!, $token: String) {
+  getArticleById(article_id: $Id, token: $token) {
+    author {
+      name
+      user_img
+      uuid
+    }
     article_img
-    type
-    labels
-    categorys
+    article_type
+    labels {
+      name
+      description
+      label_id
+    }
+    categorys {
+      category_id
+    }
     description
     title
     article
     zan_status
-    id
-    author_name
-    author_img
+    outer_id
     follow_status
-    befollowed
+    follow_user
+    beFollowed {
+      user_id
+    }
+    gather {
+      gather_id
+      gather_name
+      articles {
+        title
+        outer_id
+      }
+    }
+    zan {
+      authorId
+    }  
+    collection_status
   }
 }
 `
+
+export const insertFeeback = gql`
+ mutation($article_id: String!, $vid: String!) {
+  insertFeeback(article_id: $article_id, vid: $vid)
+ }
+`
+
+
 export const addZan = gql`
-mutation ($data: String!, $type: String!) {
-  addZan(data: $data, type: $type)
+mutation ($data: String!) {
+  addZan(data: $data)
 }
 `
 
 export const getALLUserGatherArticles = gql`
-query {
+query  {
 	getGatherArtilces {
-    author
-    author_name
-    article_data
-    muster_id
-    name
-    type
-    muster_img
-    gather_id
-    description
+    gather_img
+      gather_name
+      gather_id
+      article_description
+      article_type
+      
   }
 }
 `
 
-export const getALLUserMusterArticles = gql`
-query($page: Float!) {
-	getAllMuster(page: $page) {
-    author
-    author_name
-    article_data
-    muster_id
-    name
-    type
-    muster_img
-    description
-    article_id
-
+export const getColumnArticles = gql`
+query {
+	getBaseMusterInfo{
+          gather_name
+      gather_id
+      gather_img
+      article_description
+      article_type
+      articles {
+        outer_id
+      }
   }
 }
 `
+
+export const getSingleArticles = gql`
+query {
+	getSingleInfo {
+    title
+    article_img
+    description
+    outer_id
+    article_type
+  }
+}
+`
+
+
 
 export const getDynamic = gql`
 query($page: Float!) {
@@ -232,19 +262,23 @@ query {
 `
 
 export const getDraft = gql`
-query {
-  getDraft {
-    article_id
-    type
-    title
-    time_stmap
+query($page: Float!) {
+	getDraft(page: $page) {
+    data {
+      title
+      edit_time
+      outer_id
+      article_type
+    }
   }
+  
 }
+
 `
 
-export const followedArticle = gql`
+export const SavedArticle = gql`
   mutation ($id: String!, $type: String!) {
-    followedArticle(id: $id, type: $type)
+    SavedArticle(id: $id, type: $type)
   }
 `
 
@@ -252,41 +286,30 @@ export const getDynamicRes = gql`
 query($content: String!, $type: String!) {
   dynamicApi (content: $content, type: $type){
     description
-    id
-    zan
+    outer_id
+    zan {
+      authorId
+    }
     hot
-    type
+    article_type
     title
     hot
-    author
-    author_img
     article_img
-    author_name
-    name
     collection_status
   	zan_status
     follow_status
     edit_time
     outer_id
-    categorys
-    labels
-    
-  }
-}
-`
-
-export const WritingArticle = gql`
-query($uid: String!) {
-  getWritingArticle (uid: $uid){
-    muster_data {
-      article_data {
-        outer_id
-      }
+ 		categorys {
+      category_id
     }
-    gather_data {
-      article_data {
-        outer_id
-      }
+    labels {
+      label_id
+      description
+    }
+    author {
+      name
+      user_img
     }
   }
 }
@@ -294,75 +317,101 @@ query($uid: String!) {
 
 export const getWritingArticleById = gql`
 query($article_id: String!) {
-	getWritingArticleById(article_id: $article_id) {
-    labels
-    categorys
-    description
-    article_data {
-      article
-      title
-      article_img
-    }
-    article_img
-    article
-    title
-    type
-    muster
-    id
-
+	getWritingArticle(article_id: $article_id) {
+      type
+    	gather_id
+      gather_img
+    	gather_name
+      article_description
+      article_data {
+      	outer_id
+        title
+        article
+        description
+        article_img
+        edit_time
+    	}
+    	category
+    	labels
   }
-}
-`
-
-export const getBaseMusterInfo = gql`
-query {
- getBaseMusterInfo{
-	muster_data {
-    name
-    muster_id
-  }
-	}
 }
 `
 export const getRecords = gql`
 query($page: Float!) {
  getRecords(page: $page) {
-  article_data {
-      timestamp
-  title
-  description
-  author
-  hot
-  zan
-  id
-  type
+    data {
+    	timestamp
+    title
+    description
+    author {
+      name
+      uuid
+      user_img
+    }
+    hot
+		zan {
+      authorId
+    }
+    outer_id
+    article_type
+    }
+    next
+}
+}
+`
+
+export const getAllArticlesPagenation = gql`
+query($page:  Float!) {
+  getAllArticlesPagenation(page: $page){
+	next
+  data {
+    gather_id
+    gather_img
+    gather_name
+    articles {
+      article
+      edit_time
+      outer_id
+      hot
+      zan {
+        article_id
+      }
+      beFollowed {
+        user_id
+      }
+      title
+      labels {
+        name
+        label_id
+        description
+      }
+      categorys {
+        category_id
+      }
+    }
+    author {
+      name
+      user_img
+      uuid
+    }
+    article_description
+    article_type
+
   }
 }
 }
 `
 
 export const getAllArticles = gql`
-query($page:  Float!) {
-getAllArticles(page: $page){
-	next
-  AllArticles {
-    zan
-    hot
-    title
-    outer_id
-    article_img
-    article_type
-    description
-    edit_time
-    labels {
-      Labels {
-        name
-        description
-        label_id
+  query {
+	getAllArticles {
+    articles {
+      zan {
+        authorId
       }
+      hot
     }
   }
-}
 }
 `
 
@@ -370,57 +419,188 @@ export const getCollectionArticles = gql`
 
 query($page: Float!) {
 getCollectionArticles(page: $page)	{
-	list {
-  description
-  title
-  id
-  article_img
-  type
-  edit_time
-  author
-  zan
-  hot
-  author_img
-  author_name
-  zan_status,
-  follow_status
-  collection_status
-  labels
-  categorys
-  befollowed
+	data {
+    description
+    title
+    outer_id
+    article_img
+    article_type
+    edit_time
+    author {
+      name
+      user_img
+      uuid
+    }
+    zan {
+        article_id
+      }
+      beFollowed {
+        user_id
+      }
+    hot
+ 
+    zan_status,
+    follow_status
+    collection_status
+    labels {
+      name 
+      description
+      label_id
+    }
+    categorys {
+      category_id
+
+    }
   }
-  count
   next
 }
 }
 `
 
 export const getMusterInfoById = gql`
-query($data: String!) {
-  getMusterInfoById(mid: $data) {
-    author {
-      name
-      user_img
-      uuid_user
-    }
-    muster_img
-    name
-    article_data {
-      zan
-      article
-      hot
-      title
+	query($data: String!) {
+    getColumnArticles(data: $data){
+      gather_id
+      gather_name
+      gather_img
+      article_type
+      article_description
+      author {
+        name
+        user_img
+        uuid
+      }
+    articles {
       description
+      title
+      outer_id
+      article_img
       edit_time
-      
+      zan {
+          article_id
+        }
+        beFollowed {
+          user_id
+        }
+      hot
+      zan_status,
+      follow_status
+      collection_status
+      labels {
+        name 
+        description
+        label_id
+      }
+      categorys {
+        category_id
+
+      }
     }
-    description
+  }
+  }
+`
+
+export const createMuster = gql`
+  mutation($data: GatherInput!) {
+    createMuster(data: $data)
+  }
+`
+
+export const Search = gql`
+  query($query: String!, $page: Float!) {
+    Search(query: $query, page: $page) {
+      data {
+        author {
+          name
+          user_img
+          uuid
+        }
+        article_type
+        title
+        description
+        hot
+        zan {
+          authorId
+        }
+        article_img
+        outer_id
+        edit_time
+        labels {
+          name
+          label_id
+          description
+        }
+        categorys {
+          category_id
+          description
+        }
+      }
+      next
+    }
+  }
+`
+
+export const userRecommend = gql`
+  query($page: Float!) {
+	userRecommend(page: $page) {
+    data
+    next
   }
 }
 `
 
-export const createMuster = gql`
-  mutation($data: CMuster!) {
-    createMuster(data: $data)
+export const relateRecommend = gql`
+query($label: String!) {
+	relateRecommend(label: $label) {
+    title
+      description
+      outer_id
   }
+}
+`
+
+
+export const followArticle = gql`
+  mutation ($article_id: String!) {
+    followArticle(article_id: $article_id)
+  }
+`
+
+export const followUser = gql`
+  mutation ($followed_id: String!) {
+    followedUser(followed_id: $followed_id)
+  }
+`
+
+export const collectArticle = gql`
+  mutation ($id: String!) {
+    collectArticle(id: $id)
+  }
+`
+
+export const UserMessage = gql`
+query($page: Float!) {
+	getUserMessage(page: $page){
+    data {
+      timestamp
+      article_id
+      article_type
+      title
+      info {
+        reading_time
+      }
+    }
+    next
+  }
+}
+`
+
+export const getArticlePanelStatus = gql`
+query($article_id: String!) {
+	getArticlePanelStatus(artcle_id: $article_id) {
+    zan_status
+    follow_status
+    collect_status
+  }
+}
 `

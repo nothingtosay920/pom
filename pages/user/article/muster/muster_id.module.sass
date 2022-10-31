@@ -9,17 +9,31 @@
     width: 800px
     margin: 40px auto
     padding: 20px
-    .head
-      display: flex
+    .gatherName
+      font-weight: 500
+      font-size: 20px
     .info
       display: flex
       .muster_img
         margin-right: 10px
+      .infoContent
+        display: flex
+        flex-direction: column
+        justify-content: space-between
+        .authorInfo
+          .authorName
+            color: $color-dark-1
   .menu
     width: 840px
     margin: 0 auto
 .collect
   height: 300px
   background-color: #fff
-  .empty
-    @include empty-center()
+.gatherSkeleton
+  width: 750px
+.item
+  background-color: #fff
+.empty
+  width: 840px
+  height: 200px
+  background-color: #fff

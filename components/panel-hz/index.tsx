@@ -1,40 +1,31 @@
 import { Badge, Message, Space } from "@arco-design/web-react"
 import React, { SyntheticEvent, useEffect, useState } from "react"
 import { useMutation } from "react-query"
-import { addZan, followedArticle } from "../../api/gql/gql"
+import { addZan, SavedArticle } from "../../api/gql/gql"
 import graphqlClient from "../../api/GqlClient"
-import { ArticleType } from "../../api/interface/types"
+import { ArticleClassType, ArticleType } from "../../api/interface/types"
 import style from './index.module.sass'
 
 interface ActiveType {
-  zan: boolean | undefined,
+  zan: boolean,
   guanzhu: boolean,
   save: boolean
 }
 
 type PanelProps = {
-  article_data: {
-    zan: string,
-    zan_status?: boolean,
-    follow_status?: boolean,
-    collection_status?: boolean, 
-    article_type: ArticleType,
-
-  }
-  article_id: string,
-  zan_status?: boolean
+  article_data: ArticleType
 }
 
-const PanelHz:React.FunctionComponent<PanelProps> = (props) => {
+const PanelHz:React.FunctionComponent<PanelProps> = ({article_data}) => {
 
   const [active, setactive] = useState<ActiveType>({
-    zan: props.zan_status,
+    zan: article_data.zan_status,
     guanzhu: false,
     save: false,
   })
   
 
-  function AddZanMutation(data: string, type: ArticleType) {
+  function AddZanMutation(data: string, type: ArticleClassType) {
     
     return useMutation(async () => {
       await graphqlClient.request(addZan, {
@@ -55,9 +46,9 @@ const PanelHz:React.FunctionComponent<PanelProps> = (props) => {
 
   }
 
-  function FollowedArticle(id: string, type: ArticleType) {
+  function SavedArticleMutation(id: string, type: ArticleClassType) {
     return useMutation(async () => {
-      await graphqlClient.request(followedArticle, {id, type}).then()
+      await graphqlClient.request(SavedArticle, {id, type}).then()
     }, {
       onSuccess: () => {
         Message.success('关注成功!')
@@ -71,8 +62,8 @@ const PanelHz:React.FunctionComponent<PanelProps> = (props) => {
     })
   }
 
-  const addZanMutation = AddZanMutation(props.article_id, props.article_data.article_type)
-  const followArticle = FollowedArticle(props.article_id, props.article_data.article_type)
+  const addZanMutation = AddZanMutation(article_data.outer_id, article_data.article_type)
+  const followArticle = SavedArticleMutation(article_data.outer_id, article_data.article_type)
 
   const zanClick = (e: SyntheticEvent) => {
     if (active.zan) {
@@ -98,7 +89,7 @@ const PanelHz:React.FunctionComponent<PanelProps> = (props) => {
               <use xlinkHref={!active.zan ? "#icon-yiguanzhu" : '#icon-yiguanzhu-copy'}></use>
             </svg>
             {
-              props.article_data.zan &&  Number(props.article_data.zan) > 0 ? <div className={style.panelText}>{props.article_data.zan}个点赞！</div>: <div className={style.panelText}>快来点赞吧！</div> 
+              article_data.zan_status &&  Number(article_data.zan.length) > 0 ? <div className={style.panelText}>{article_data.zan.length}个点赞！</div>: <div className={style.panelText}>快来点赞吧！</div> 
             }
           </div>
   

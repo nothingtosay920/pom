@@ -34,7 +34,6 @@ export const RAF = (func: RAFFunc, options: RAFoptions = {
         if (nextTime < 0) {
           nextTime = 0;
         }
-        console.log(`执行下一次渲染的时间是：${nextTime}ms`);
         func(currentCount)
         if (currentCount <= 0) {
           currentCount = 0;

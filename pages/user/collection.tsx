@@ -1,72 +1,62 @@
 import { Breadcrumb, Empty, Layout, Space } from "@arco-design/web-react"
 import { FC, useState } from "react"
 import { List, ListRowProps, ListRowRenderer, WindowScroller } from "react-virtualized"
-import { DynamicEntry } from "."
-import { GetCollectionArticlesArticles } from "../../api/interface/api"
-import { dynamicApi } from "../../api/interface/types"
+import { DynamicEntry } from "./user"
+import { GetCollectionArticlesArticles, useGetUserByCookie } from "../../api/interface/api"
 import BaseUserInfo from "../../components/base-user-info/base-user-info"
 import getBasicLayout from "../../components/Layout"
-import style from './collection.module.sass'
+import styles from './collection.module.sass'
+import ArticleCompoent from "../../components/aritlce-component/article-component"
+import { ArticleType } from "../../api/interface/types"
 
 const Content = Layout.Content
 const BreadcrumbItem = Breadcrumb.Item
 
-type CollectionEntryProps = {
-  data: dynamicApi
-}
 
-const CollectionEntry: FC<CollectionEntryProps> = (props) => {
-  return (
-    <div className={style.entry}>
-      <Space direction='horizontal' size='small'>
-        <div>{props.data.author_name}</div>
-        <div className={style.editTime}>{props.data.edit_time}</div>
-        <div>labels</div>
-      </Space>
-      <div>
-        <div className={style.entryTitle}>{props.data.title}</div>
-        <div className={style.entryDesc}>{props.data.description}</div>
-      </div>
-      <div>
-        panel
-      </div>
-    </div>
-  )
-}
+export const CollectionArticleComponent = () => {
+  const {data: userData, isError}  =  useGetUserByCookie()
+  const {data: collectArticles, isSuccess, fetchNextPage, hasNextPage, isLoading } = GetCollectionArticlesArticles(userData?.uuid)
 
-
-const CollectionArticleComponent = () => {
-  const {data: articles, isSuccess, fetchNextPage, hasNextPage, isLoading } = GetCollectionArticlesArticles()
-  const [page, setpage] = useState(0)
-
-  if (articles === undefined || articles.pages.length) {
-    return <Empty className={style.empty}></Empty>
+  if (collectArticles === undefined || collectArticles.pages.length === 0) {
+    return <Empty className={styles.empty}></Empty>
   }
-  console.log(
-    articles  , 'aricle'
-  );
-  
-  
-  
-  const list = articles.pages.concat().reduce<dynamicApi[]>((prev, current) => {
-    prev.push(...current.list)
+ 
+  const list = collectArticles.pages.concat().reduce<ArticleType[]>((prev, current) => {
+    prev.push(...current.data)
     return prev
   }, [])
 
-function rowRenderer({key, index, style}: ListRowProps) {
-  return (
-    <div key={key}>
-      <CollectionEntry data={list[index]}></CollectionEntry>
-    </div>
-  );
+
+  if (!list.length) {
+    return <Empty className={styles.empty}></Empty>
+  }
+
+
+  function rowRenderer({key, index, style}: ListRowProps) {
+    return (
+      <div className={styles.render}>
+        <ArticleCompoent 
+          key={list[index].outer_id}
+          data={list[index]}
+          author={list[index].author}
+        >
+        </ArticleCompoent>
+      </div>
+    )
 }
 
-const onScroll = ({}) => {
-  
+const loadMore = (params: {
+  scrollLeft: number;
+  scrollTop: number;
+}) => {
+
+  if (document.body.scrollHeight - params.scrollTop - document.body.clientHeight < 250) {
+    fetchNextPage()
+  }
 }
 
   return (
-    <WindowScroller onScroll={onScroll}>
+    <WindowScroller onScroll={loadMore}>
       {({ height, isScrolling, onChildScroll, scrollTop }) => (
         <List
           autoHeight
@@ -77,7 +67,7 @@ const onScroll = ({}) => {
           rowHeight={120}
           rowRenderer={rowRenderer}
           scrollTop={scrollTop}
-          width={730}
+          width={750}
 
         />
       )}
@@ -88,10 +78,10 @@ const onScroll = ({}) => {
 const UserCollection = () => {
   return (
     // <DynamicEntry item={}></DynamicEntry>
-    <Content className={style.recordsWrapper}>
-      <div className={style.recordsContent}>
-          <Breadcrumb className={style.bread}>
-            <BreadcrumbItem className={style.breadTitle}>我的收藏</BreadcrumbItem>
+    <Content className={styles.recordsWrapper}>
+      <div className={styles.recordsContent}>
+          <Breadcrumb className={styles.bread}>
+            <BreadcrumbItem className={styles.breadTitle}>我的收藏</BreadcrumbItem>
           </Breadcrumb>
           <CollectionArticleComponent></CollectionArticleComponent>
       </div>

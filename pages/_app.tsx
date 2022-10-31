@@ -7,21 +7,19 @@ import { ReactQueryDevtools } from "react-query/devtools";
 import Head from 'next/head';
 import 'markdown-navbar/dist/navbar.css';
 import { ReactElement } from 'react-markdown/lib/react-markdown';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Provider } from 'react-redux';
 import store from '../store';
 import Loding from '../components/loading';
 import NextBrowserRouter from '../router/NextBrowserRouter';
-import { Link } from 'react-router-dom';
-import App from 'next/app';
-import NextLink from 'next/link'
-import AboutUs from '../views/about';
-import TestUs from './test';
+import { Link, Route, Routes } from 'react-router-dom';
+import { FpjsProvider, useVisitorData } from '@fingerprintjs/fingerprintjs-pro-react';
+import { Html } from 'next/document';
 
 const queryClient = new QueryClient()
 
 
-function MyApp({ Component, pageProps, router }: AppPropsWithLayout ) {
+function MyApp({ Component, pageProps, router }: AppPropsWithLayout )  {
   const getLayout = Component.getLayout || ((page: ReactElement) => page)
 
   useEffect(() => {
@@ -31,23 +29,27 @@ function MyApp({ Component, pageProps, router }: AppPropsWithLayout ) {
   
 
   return ( 
-  <>
+  <div>
     <Head>
-      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1" />
     </Head>
     <QueryClientProvider client={queryClient} >
       <NextBrowserRouter asPath={router.asPath}>
+      <FpjsProvider
+        loadOptions={{
+          apiKey: '1LXHEURL21Hb7W5dbKJv',
+        }}
+      >
 				<Provider store={store}>
 						{getLayout(<Component {...pageProps}></Component>)}
-
 				</Provider>
+      </FpjsProvider>
       </NextBrowserRouter>
-
-      {/* <ReactQueryDevtools initialIsOpen /> */}
+      <ReactQueryDevtools initialIsOpen />
     </QueryClientProvider>
 
 
-  </>
+  </div>
   )  
 }
 

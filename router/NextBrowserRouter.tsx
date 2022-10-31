@@ -11,8 +11,6 @@ interface CustomBrowserRouterProps {
 function NextBrowserRouter({ children, asPath }: React.PropsWithChildren<CustomBrowserRouterProps>) {
 	
 	if (typeof window !== 'undefined') {
-		console.log('history router');
-		
 		const historyRef = React.useRef<MemoryHistoryInstance>()
 
 		if (historyRef.current == null) {
@@ -34,8 +32,6 @@ function NextBrowserRouter({ children, asPath }: React.PropsWithChildren<CustomB
 		)
     
 	} else {
-		console.log('static router');
-		
 		return <StaticRouter location={asPath}>{children}</StaticRouter>
 	}
 }

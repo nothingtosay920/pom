@@ -1,34 +1,57 @@
-import { Button, Divider, Empty, Image, Popover } from "@arco-design/web-react"
+import { Button, Divider, Empty, Image, List, Popover } from "@arco-design/web-react"
 import { IconMore } from "@arco-design/web-react/icon"
 import Link from "next/link"
 import { FC } from "react"
-import { List, ListRowProps, WindowScroller } from "react-virtualized"
-import { ArticleMainType } from "../../api/interface/types"
+import { ListRowProps, WindowScroller } from "react-virtualized"
+import { ArticleClassType, ArticleType } from "../../api/interface/types"
 import style from './column-entry.module.sass'
 
-type CloumnEntryProps = {
-  item: ArticleMainType[] | undefined
+export type ColumnItem = {
+  gather_img?: string,
+  gather_name?: string,
+  gather_id?: string,
+  article_description?: string,
+  outer_id?: string,
+  article_img?: string,
+  description?: string
+  title?: string,
+  article_type: ArticleClassType
+  articles?: {
+    outer_id: string;
+  }[]
 }
 
-const ColumnEntryComponent: FC<ArticleMainType> = (props) => {
+type ColumnEntryItem = {
+  data: ColumnItem,
+  index: number | undefined
+}
 
+ type CloumnEntryProps = {
+  data: ColumnItem[],
+}
+
+const ColumnEntryComponent: FC<ColumnEntryItem> = ({data, index}) => {
     return (
       <Link href={
-        props.type === 'SINGLE' ? '/article/' + props.article_id : 'article/muster/' + props.muster_id
+        data.article_type === 'SINGLE' ? '/article/' + data.outer_id : 'column/' + data.gather_id
       } passHref>
+        <a target="_blank" rel="noreferrer">
         <div className={style.columnEntry}>
 
           <div className={style.entryContent}>
-            <Image
-              width={140}
-              height={95}
-              src={props.muster_img}
-              alt='lamp'
-              className={style.entryImg}
-            />
+            {
+              (data.article_type=== 'SINGLE' ?  data.article_img : data.gather_img) && 
+              <Image
+                width={140}
+                height={95}
+                src={data.article_type === 'SINGLE' ?  data.article_img : data.gather_img}
+                alt='lamp'
+                className={style.entryImg}
+              />
+            }
             <div>
-              <div>{props.name}</div>
-              <div className={style.colunmDesc}>{props.description}</div>
+              <div>{data.article_type=== 'SINGLE' ? data.title : data.gather_name}</div>
+              <div className={style.colunmDesc}>{data.article_type=== 'SINGLE' ? data.description : data.article_description}</div>
             </div>
           </div>
           <Popover
@@ -43,44 +66,38 @@ const ColumnEntryComponent: FC<ArticleMainType> = (props) => {
             <IconMore fontSize={30} cursor="pointer" />
           </Popover>
 
-
-          <div className={style.colunmNums} style={{'display': props.type === 'SINGLE' ? 'none': 'block '}}></div>
+          {
+            data.article_type === 'SINGLE' || index === 0 || !index || !data.article_img ?  <></> :
+            <div className={style.colunmNums}>{index}</div>
+          }
+          
         </div>
+        </a>
       </Link>
     )
 }
 
 
-const ColumnEntry: FC<CloumnEntryProps> = ({item}) => {
+const ColumnEntry: FC<CloumnEntryProps> = ({data}) => {
   
-  
-  if (item == undefined || item.length == 0) {
-    return <Empty className={style.empty}></Empty>
+  const RecordsComponent = (item: any, index: number) => {
+    return <ColumnEntryComponent 
+      data={data[index]}
+      index={data[index].article_type === 'SINGLE' ? 0 : data[index].articles?.length}
+      key={data[index].article_type === 'SINGLE' ? data[index].outer_id : data[index].gather_id }
+    ></ColumnEntryComponent>
   }
-
-  const RecordsComponent = ({key, index}: ListRowProps) => {
-    return <ColumnEntryComponent {...item[index]} key={key}></ColumnEntryComponent>
-  }
-
-  const onScroll = () => {}
 
   return (
-    <WindowScroller onScroll={onScroll}>
-      {({ height, isScrolling, onChildScroll, scrollTop }) => (
-        <List
-          autoHeight
-          rowCount={item.length}
-          height={height}
-          isScrolling={isScrolling}
-          onScroll={onChildScroll}
-          rowHeight={130}
-          rowRenderer={RecordsComponent}
-          scrollTop={scrollTop}
-          width={750}
-
-        />
-      )}
-    </WindowScroller>
+    <List
+      className='list-demo-action-layout'
+      wrapperStyle={{ maxWidth: 840 }}
+      bordered={false}
+      pagination={{ pageSize: 3 }}
+      dataSource={data}
+      render={RecordsComponent}
+      noDataElement={<Empty className={style.empty}></Empty>}
+    />
   )
 }
 

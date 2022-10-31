@@ -1,19 +1,19 @@
-import { Avatar, Button, Divider, Empty, Image, Layout, Menu, Pagination, Space } from "@arco-design/web-react";
+import { Avatar, Button, Divider, Empty, Image, Layout, Menu, Pagination, Skeleton, Space } from "@arco-design/web-react";
+import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
 import { useRouter } from "next/router";
 import React, { FC, useEffect, useRef, useState } from "react";
+import LazyLoad from "react-lazyload";
 import { InfiniteData } from "react-query";
-import { Link, Outlet, Route, Routes } from "react-router-dom";
+import { Link, Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { List, ListRowProps, WindowScroller } from "react-virtualized";
 import { DynamicApi, GetAllArticles, GetArticle, GetDynamic, GetUserInfo, useGetUserByCookie } from "../../api/interface/api";
-import { AllArticlesType, ArticleMainType, ArticleType, DymicApiRes, dynamicApi, getUserType } from "../../api/interface/types";
-import ArticleCompoent from "../../components/aritlce-component/article-component";
+import { AllArticlesType, ArticleClassType, ArticleType, DymicApiRes, GatherType, getUserType } from "../../api/interface/types";
 import getBasicLayout from "../../components/Layout";
 import PanelHz from "../../components/panel-hz";
 import ShowDate, { TimeTamp } from "../../components/show-date/show-date";
 import style from './index.module.sass'
 
 type UserInfo = {
-  author_id: string,
   name: string,
   author_img: string,
   timestamp: string
@@ -24,63 +24,29 @@ const Content = Layout.Content;
 const MenuItem = Menu.Item;
 
 
-export const ColumnArticleComponent = () => {
-  const {data: articles, isSuccess, fetchNextPage, hasNextPage } = GetAllArticles()
-  const [page, setpage] = useState(0)
-
-  if (articles === undefined) {
-    return <Empty></Empty>
-  }
-
-  const list = articles.pages.reduce<ArticleMainType[]>((prev, current) => {
-     prev.push(...current.AllArticles)            
-     return prev
-  }, [])
-
-  const onScroll = () => {}
-
-  const RecordsComponent = ({key, index}: ListRowProps) => {
-    return (
-      <ArticleCompoent user={{name: '123'}} data={list[index]}></ArticleCompoent>
-    )
-  }
-
-  return (
-    <WindowScroller onScroll={onScroll}>
-    {({ height, isScrolling, onChildScroll, scrollTop }) => (
-      <List
-        autoHeight
-        rowCount={list.length}
-        height={height}
-        isScrolling={isScrolling}
-        onScroll={onChildScroll}
-        rowHeight={130}
-        rowRenderer={RecordsComponent}
-        scrollTop={scrollTop}
-        width={750}
-
-      />
-    )}
-  </WindowScroller>
-  )
-}
-
 export const DymicBaseComponent = () => {
-  const {data: dynamic, isSuccess, fetchNextPage, hasNextPage } = GetDynamic()
+  const {data} = useGetUserByCookie()
+  const router = useRouter()
+  const {data: dynamic, isError, fetchNextPage, hasNextPage, isLoading, isIdle } = GetDynamic(data?.uuid)
 
-
-  if (dynamic === undefined || dynamic.pages.length === 0) {
-    return (
-      <Empty className={style.entry}></Empty>
-    )
+  if (isIdle) {
+    router.push('/unauth')
   }
 
-  
-
-  const onScroll = () => {
-
+  if (isLoading || isError || !dynamic) {
+    return <Skeleton
+    loading={true}
+    className={style.skeleton}
+    text={{
+      rows: 8,
+      width: [400, '80%', 700, 500, 600, 400, 800, 700],
+    }}
+    animation
+  >
+  </Skeleton> 
   }
-  
+
+
   const list = dynamic.pages.reduce<{
     content: string,
     type: string,
@@ -92,9 +58,24 @@ export const DymicBaseComponent = () => {
     // return [...prev.dynamic, ...current.dynamic]
   }, [])
 
-  
-  const RecordsComponent = ({key, index, style}: ListRowProps) => {
+  if (!list.length) {
+    return (
+      <Empty className={style.entry}></Empty>
+    )
+  }
 
+  const loadMore = (params: {
+    scrollLeft: number;
+    scrollTop: number;
+  }) => {
+    
+      if (document.body.scrollHeight - params.scrollTop - document.body.clientHeight < 250) {
+        fetchNextPage()
+      }
+  }
+  
+
+  const RecordsComponent = ({key, index, style}: ListRowProps) => {
     return (
       <div key={key} style={style}>
         <Dymic key={list[index].dynamic_id} dymic={list[index]}></Dymic>
@@ -105,7 +86,7 @@ export const DymicBaseComponent = () => {
 
 
   return (
-      <WindowScroller onScroll={onScroll}>
+      <WindowScroller onScroll={loadMore}>
         {({ height, isScrolling, onChildScroll, scrollTop }) => (
           <List
             autoHeight
@@ -113,7 +94,7 @@ export const DymicBaseComponent = () => {
             height={height}
             isScrolling={isScrolling}
             onScroll={onChildScroll}
-            rowHeight={260}
+            rowHeight={240}
             rowRenderer={RecordsComponent}
             scrollTop={scrollTop}
             width={750}
@@ -133,10 +114,10 @@ const Dymic = (props: {
 }) => {
 
   const {data} = useGetUserByCookie()
-  const {data: item, isError} = DynamicApi(props.dymic.content, props.dymic.type)
-
+  const {data: item} = DynamicApi(props.dymic.content, props.dymic.type, data?.uuid)
+  
   if (!item || !data) {
-    return <div></div>
+    return <></>
   }
 
   switch (props.dymic.type) {
@@ -147,9 +128,8 @@ const Dymic = (props: {
           item={item} 
           type={props.dymic.type} 
           userInfo={{
-            author_id: item.outer_id,
-            name: item.author_name,
-            author_img: item.author_img,
+            name: item.author.name,
+            author_img: item.author.user_img,
             timestamp: item.edit_time
           }}
         ></DymicItem>
@@ -161,9 +141,8 @@ const Dymic = (props: {
           item={item} 
           type={props.dymic.type} 
           userInfo={{
-            author_id: item.outer_id,
-            name: item.name,
-            author_img: item.author_img,
+            name: item.author.name,
+            author_img: item.author.user_img,
             timestamp: item.edit_time
 
           }}
@@ -176,9 +155,8 @@ const Dymic = (props: {
           item={item} 
           type={props.dymic.type} 
           userInfo={{
-            author_id: item.outer_id,
-            name: item.name,
-            author_img: item.author_img,
+            name: item.author.name,
+            author_img: item.author.user_img,
             timestamp: item.edit_time
 
           }}
@@ -191,9 +169,8 @@ const Dymic = (props: {
           item={item} 
           type={props.dymic.type} 
           userInfo={{
-            author_id: item.outer_id,
-            name: item.name,
-            author_img: item.author_img,
+            name: item.author.name,
+            author_img: item.author.user_img,
             timestamp: item.edit_time
 
           }}
@@ -204,7 +181,7 @@ const Dymic = (props: {
         <>
           {
             item !== undefined && data !== undefined ?
-            <div>{data?.name}关注了{item.name}</div>  : <></>
+            <div>{data?.name}关注了{item.author.name}</div>  : <></>
           }
         </>
       )
@@ -215,7 +192,7 @@ const Dymic = (props: {
 
 const DymicItem = (props: {
   data: getUserType , 
-  item: dynamicApi, 
+  item: ArticleType, 
   type: string,
   userInfo: UserInfo
 }) => {
@@ -240,21 +217,22 @@ const DymicItem = (props: {
       <div>{props.data.name}<span className={style.dynamicText}>{' '+ dynamicText}这篇文章</span></div>
       <Divider style={{'margin': '12px'}} />
         <UserInfoCompontents 
-          author_id={props.userInfo.author_id} 
           name={props.userInfo.name} 
           author_img={props.userInfo.author_img}
           timestamp={props.userInfo.timestamp}
         />
-        <DynamicEntry item={props.item} type={props.type as ArticleType} />
+        <DynamicEntry item={props.item} type={props.type as ArticleClassType} />
       <Divider style={{'margin': '12px'}} />
     </div>
   )
 }
 
-const UserInfoCompontents: FC<UserInfo> = ({author_img, name, author_id, timestamp}) => {
+const UserInfoCompontents: FC<UserInfo> = ({author_img, name, timestamp}) => {
   return (
     <div className={style.baseuserInfo}>
-      <Image src={author_img} width="40" height={"40"}></Image>
+      <LazyLoad height={40}>
+        <Image alt="the author logo" src={author_img} width="40" height={"40"}></Image>
+      </LazyLoad>
       <div className={style.InfoName}>
         <div className={style.userName}>{name}</div>
         <TimeTamp className={style.timestamp} time={timestamp} ></TimeTamp>
@@ -265,11 +243,11 @@ const UserInfoCompontents: FC<UserInfo> = ({author_img, name, author_id, timesta
 }
 
 export const DynamicEntry = (props: {
-  item: dynamicApi,
-  type: ArticleType
+  item: ArticleType,
+  type: ArticleClassType
 }) => {
   return (
-    <Link to={{pathname: '/article' + `/${props.item.id}`}}>
+    <Link to={{pathname: '/article' + `/${props.item.outer_id}`}}>
       <div className={style.descWrapper}>
         <div className={style.entryItem}>
           <div className={style.desc}>
@@ -277,24 +255,21 @@ export const DynamicEntry = (props: {
               <div className={style.descText}>{props.item.description}</div>
           </div>
           <PanelHz
-            article_data={{
-              zan: props.item.zan,
-              zan_status: props.item.zan_status,
-              follow_status: props.item.follow_status,
-              collection_status: props.item.collection_status,
-              article_type: props.item.type
-            }}
-            article_id={props.item.id}
-            zan_status={false}></PanelHz>
+            article_data={props.item}
+            >
+            
+            </PanelHz>
         </div>
         
-        <Image
-          width={140}
-          height={95}
-          src={props.item.article_img}
-          alt='lamp'
-          className={style.itemImg}
-        />
+        {
+          props.item.article_img  && <Image
+            width={140}
+            height={95}
+            src={props.item.article_img}
+            alt='lamp'
+            className={style.itemImg}
+          />
+        }
       </div>
   </Link>
   )
@@ -302,13 +277,12 @@ export const DynamicEntry = (props: {
 
 
 const UserIndex = () => {
-  const [page, setpage] = useState(1)
-  const {data: userInfo, isSuccess: UserInfoSuccess} = GetUserInfo()
-  const router = useRouter()
+  const {data: userData, isError}  =  useGetUserByCookie()
+  const {data: userInfo, isSuccess: UserInfoSuccess} = GetUserInfo(userData?.uuid)
+  const router = useRouter()  
+  const navigate = useNavigate()
+  const [key, setKey] = useState(router.asPath)
 
-  // if (isSuccess && dynamic !== undefined && UserInfoSuccess) {
-  //   refs.current.push(...dynamic)
-  // }
 
   return (
     <Layout className={style.wrapper}>
@@ -318,13 +292,14 @@ const UserIndex = () => {
             <Image src={userInfo?.user_img} className={style.userInfoImg} alt={'userInfo'} />
             <div className={style.userInfoText}>{userInfo?.name}</div>
           </div>
-          <Button className={style.editBtn} >编辑状态</Button>
         </div>
-        <Menu mode='horizontal' defaultSelectedKeys={['1']} >
-          <MenuItem key='1' onClick={() => router.push('/user/dynamic')}>动态</MenuItem>
-          <MenuItem key='2' onClick={() => router.push('/user/articles')}>文章</MenuItem>
-          <MenuItem key='3'>关注</MenuItem>
-          <MenuItem key='4'><Link to={'/user/collection'}>收藏</Link></MenuItem>
+        <Menu mode='horizontal' defaultSelectedKeys={[key]} >
+          {/* <MenuItem key='/user' onClick={() => navigate('/user')}>动态</MenuItem> */}
+          <MenuItem key='/user'><Link to={'/user'}>动态</Link></MenuItem>
+
+          <MenuItem key='/user/articles' onClick={() => navigate('/user/articles')}>文章</MenuItem>
+          {/* <MenuItem key='3'>关注</MenuItem> */}
+          <MenuItem key='/user/collect'><Link to={'/user/collect'}>收藏</Link></MenuItem>
         </Menu>
       </Header>
       <Content>

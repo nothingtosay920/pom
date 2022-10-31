@@ -9,10 +9,14 @@ const path = require('path')
 
 const nextConfig = {
   reactStrictMode: false,
+  swcMinify: true,
   sassOptions: {
     includePaths: [path.join(__dirname, 'styles')],
     prependData: `@import "styles/globalVar.module.sass"`
-  }
+  },
+  images: {
+    domains: ['ending-homework.oss-cn-beijing.aliyuncs.com'],
+  },
 }
 
 module.exports = nextConfig

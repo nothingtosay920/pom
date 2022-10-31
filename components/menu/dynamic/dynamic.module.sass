@@ -1,0 +1,40 @@
+.panel
+  @include panel-large()
+  cursor: pointer
+  margin-left: 20px
+.wrapper
+  display: flex
+  font-size: 10px
+  justify-content: space-between
+  align-items: center
+  padding: 10px
+  position: relative
+  .imgWrapper
+    width: 60px
+    height: 40px
+    position: relative
+  .info
+    display: flex
+    flex-direction: column
+    .title
+      font-weight: 400
+.wrapper:hover
+  background-color: $color-dark-2
+  cursor: pointer
+.droplist
+  background-color: #fff
+  width: 300px
+  height: 450px
+  border: 1px solid $color-dark-2
+  border-radius: 10px  
+  box-shadow: 1px 2px 10px $color-dark-2
+  .header
+    text-align: center
+    color: $color-dark
+    border-bottom: 1px solid $color-dark-2
+    font-size: 20px
+    height: 50px
+    line-height: 50px
+  .empty
+    @include empty-center
+    height: 200px

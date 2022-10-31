@@ -1,3 +1,7 @@
+import { format } from "date-fns"
+import { debounce } from "debounce"
+import { useCallback } from "react"
+
 export function parseEmpty(value: any): boolean {
   let res = false
   if (typeof value === 'object') {
@@ -17,15 +21,18 @@ export function parseEmpty(value: any): boolean {
   return res
 }
 
-// class V {
-//   state = 'mHmRUqOnuXrv2N4dVoob0'
-//   set(value: string) {
-//     this.state = value
-//   }
-//   get() {
-//     return this.state
-//   }
+export const _isMobile = () => {
+  let flag = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)
+  return flag;
+}
+  
+// export const getAgentInfo = async () => {
+//   const fpPromise = await FingerprintJS.load({
+//     apiKey: "1LXHEURL21Hb7W5dbKJv"
+//   })
+//  const result = await fpPromise.get()
+//  return result.visitorId
+ 
 // }
 
-// const value = new V()
-// export default value
+export const getNowTime = () => format(new Date(), 'yyyy-MM-dd HH:mm:ss')

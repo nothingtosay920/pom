@@ -7,9 +7,12 @@
     padding: 0 10px
     border-top: 1px solid $color-gray-1
     border-bottom: none
-    height: 80px
+    height: 100px
+    align-items: center
+    .time
+      color: $color-dark-1
   .draftInfo:hover
-    background-color: $color-gray-1 
+    background-color: $color-dark-2
   .draftBread
     height: 55px
     display: flex
@@ -18,4 +21,7 @@
     .draftBreadTitle
       color: $color-dark
       font-weight: 600
+.empty
+  @include empty-center
+  width: 750px
  

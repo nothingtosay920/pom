@@ -2,16 +2,21 @@
   cursor: pointer
   display: flex
   justify-content: space-between
-  .desc
-    .descText
-      color: $color-dark-1
-      margin: 10px 0
-      font-size: 16px
-    .itemTitle
-      font-weight: 600
-      font-size: large
-    .itemImg
-      margin-left: 24px  
+  padding: 0 10px
+  .entryItem
+    display: flex
+    flex-direction: column
+    justify-content: space-between
+    .desc
+      .descText
+        color: $color-dark-1
+        font-size: 16px
+      .itemTitle
+        font-weight: 600
+        font-size: large
+  .fillImg
+    width: 205px
+    height: 200px
 .actionList 
   display: flex
   .panel

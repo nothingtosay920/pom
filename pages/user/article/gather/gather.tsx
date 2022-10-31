@@ -1,6 +1,5 @@
-import { Breadcrumb, Collapse, Divider, Empty, Input, Skeleton } from "@arco-design/web-react"
+import { Breadcrumb, Collapse, Divider, Empty, Input, Message, Skeleton } from "@arco-design/web-react"
 import { GetGatherArtilces } from "../../../../api/interface/api"
-import ArticleCompoent from "../../../../components/aritlce-component/article-component";
 import ColumnEntry from "../../../../components/column-entry/column-entry";
 import style from './gather.module.sass'
 
@@ -11,6 +10,33 @@ const InputSearch = Input.Search
 
 const GatherIndex = () => {
   const {data, isLoading} = GetGatherArtilces()
+
+
+  if (isLoading) {
+    return (
+      <div className={style.gatherSkeleton}>
+      <Skeleton
+         text={{
+           rows: 3,
+           width: ['100%', 600, 400],
+           
+         }}
+         animation={true}
+         image
+   ></Skeleton> 
+   </div>
+    )
+  }
+    
+  if (data == undefined) {
+    Message.error("出错了！")
+    return <></>
+  }
+
+
+  if (!data.length) {
+    return <Empty className={style.empty}></Empty>
+  }
 
   return (
     <>
@@ -26,21 +52,7 @@ const GatherIndex = () => {
           style={{ width: 250, height: 30 }}
         />
       </div>
-      {
-        isLoading ?
-        <div className={style.gatherSkeleton}>
-           <Skeleton
-              text={{
-                rows: 3,
-                width: ['100%', 600, 400],
-                
-              }}
-              animation={true}
-              image
-        ></Skeleton> 
-        </div>  : 
-        <ColumnEntry item={data}></ColumnEntry>
-      }
+      <ColumnEntry data={data}></ColumnEntry>
     </>
       
   )

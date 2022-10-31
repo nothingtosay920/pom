@@ -12,23 +12,32 @@ type ToolType = {
 
 const ToolComponents: React.FunctionComponent<ToolType> = (props) => {
   const router = useRouter()
-
+  
   return (
     <div className={style.popup}>
-      <Tooltip className={style.toolTip} key={props.item.name} defaultPopupVisible >
+      <Tooltip key={props.item.name} defaultPopupVisible >
         {
-          props.item.labels.length > 0 && props.item.labels.map((item) =>  (
-              <Button 
-                key={item.name}
-                shape="round" size='large'
-                // style.tipBtn
-                className={style.tipBtn}
-                onClick={() => router.push(`/${item.name}`)}>
-                  {item.name}
-              </Button>
-            )
+          props.item.labels.length === 1
+           ? 
+          <Button 
+            shape="round" size='large'
+            // style.tipBtn
+            className={style.tipBtn}
+            onClick={() => router.push(`/${props.item.labels[0].description}`)}>
+              {props.item.labels[0].name}
+          </Button>
+            :
+          props.item.labels.map((item) =>  (
+            <Button 
+              key={item.name}
+              shape="round" size='large'
+              className={style.tipBtn}
+              onClick={() => router.push(`/${item.description}`)}>
+                {item.name}
+            </Button>
           )
-        } 
+          )
+        }
       </Tooltip>
     </div>
   )

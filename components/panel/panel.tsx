@@ -1,136 +1,127 @@
 import { Badge, Message, Space } from "@arco-design/web-react"
+import { useRouter } from "next/router"
 import React, { SyntheticEvent, useEffect, useState } from "react"
 import { useMutation } from "react-query"
-import { addZan, followedArticle } from "../../api/gql/gql"
+import { useParams } from "react-router-dom"
+import { addZan, collectArticle, followArticle, SavedArticle } from "../../api/gql/gql"
 import graphqlClient from "../../api/GqlClient"
-import { ArticleType } from "../../api/interface/types"
+import { GetArticlePanelStatus, useGetUserByCookie } from "../../api/interface/api"
+import { ArticleClassType, ArticleType } from "../../api/interface/types"
+import { useAppDispatch, useAppSelector } from "../../store"
+import { open } from "../../store/features/status"
 import style from './panel.module.sass'
 
-interface ActiveType {
-  zan: boolean,
-  guanzhu: boolean,
-  save: boolean
-}
-
 type PanelProps = {
-  article_data: {
-    zan: string,
-    zan_status: boolean,
-    follow: number,
-    follow_status: boolean,
-    collection_status: boolean,
-    article_id: string,
-    article_type: ArticleType
-  }
   panel_type: 'horizontal' | 'vertical',
   article_id: string,
-  type: ArticleType,
-  zan_status: boolean
+  type: ArticleClassType,
 }
 
-const Panel:React.FunctionComponent<PanelProps> = (props) => {
-
-  const [active, setactive] = useState<ActiveType>({
-    zan: props.zan_status,
-    guanzhu: false,
-    save: false,
-  })
-  
-
-  function AddZanMutation(data: string, type: ArticleType) {
-    
-    return useMutation(async () => {
+const Panel:React.FunctionComponent<PanelProps> = ({panel_type = 'vertical', article_id}) => {
+  const router = useRouter()
+  const addZanMutation = AddZanMutation(article_id)
+  const followArticleMuation = FollowedArticleMutation(article_id)
+  const collectArticles = CollectMuation(article_id)
+  const {data: userData} = useGetUserByCookie()
+  const {data, error, refetch, isSuccess} = GetArticlePanelStatus(router.query.id as string, userData?.uuid)
+  const dispatch = useAppDispatch()
+ 
+  function AddZanMutation(data: string) {
+    return useMutation(async (zan: boolean) => {
       await graphqlClient.request(addZan, {
-        data,type
-      }, ).then()
-    }, {
-      onSuccess: () => {
-        Message.success('点赞成功!')
-        setactive((state) => {
-          return {
-            ...state,
-            zan: !state.zan
-          }
-        })
+        data
+      } ).then()
+    }, 
+      {
+        onSuccess: () => {
+          refetch()
+        },
+        onError: (err) => {
+          console.log(err);
+          
+        }
       }
-    })
+    )
 
 
   }
 
-  function FollowedArticle(id: string, type: ArticleType) {
-    return useMutation(async () => {
-      await graphqlClient.request(followedArticle, {id, type}).then()
+  function FollowedArticleMutation(article_id: string) {
+    return useMutation(async (follow: boolean) => {
+      await graphqlClient.request(followArticle, {article_id}).then()
     }, {
       onSuccess: () => {
-        Message.success('关注成功!')
-        setactive((state) => {
-          return {
-            ...state,
-            guanzhu: !state.guanzhu
-          }
-        })
+        refetch()
       }
     })
   }
 
-  const addZanMutation = AddZanMutation(props.article_id, props.type)
-  const followArticle = FollowedArticle(props.article_id, props.type)
+  function CollectMuation(id: string) {
+    return useMutation(async (collect: boolean) => {
+      await graphqlClient.request(collectArticle, {id}).then((res) => res)
+    }, {
+      onSuccess: () => {
+        refetch()
+      }
+    })
+  }
 
-  const zanClick = (e: SyntheticEvent) => {
-    if (active.zan) {
-      return
+  const zanClick = () => {
+    if (isSuccess) {
+      addZanMutation.mutate(!data.zan_status)
     } else {
-      addZanMutation.mutate()
+      Message.info('当前未登录')
+      dispatch(open())
     }
   }
 
   const followClick = () => {
-    if (active.guanzhu) {
-      return 
+    if (isSuccess) {
+      followArticleMuation.mutate(!data.follow_status)
     } else {
-      followArticle.mutate()
+      Message.info('当前未登录')
+      dispatch(open())
+    }
+  }
+
+  const collectClick = () => {
+    if (isSuccess) {
+      collectArticles.mutate(!data.collect_status)
+    }else {
+      Message.info('当前未登录')
+      dispatch(open())
     }
   }
 
   return (
-      <Space direction={props.panel_type} size={'large'}>
+      <Space direction={panel_type} size={'large'}>
 
           <div className={style.panelWrapper}  data-panel="zan" onClick={zanClick}>
               <svg className={style.panel} aria-hidden="true">
-                <use xlinkHref={active.zan === false ? "#icon-yiguanzhu" : '#icon-yiguanzhu-copy'}></use>
+                <use xlinkHref={!!data?.zan_status === false ? "#icon-yiguanzhu" : '#icon-yiguanzhu-copy'}></use>
               </svg>
                 {
-                  props.panel_type === 'horizontal' ? <div className={style.panelText}>{props.article_data.zan}</div> : <></>
+                  panel_type === 'horizontal' ? <div className={style.panelText}>{data?.zan_status}</div> : <></>
                 }
           </div>
           <div className={style.panelWrapper} data-panel="guanzhu" onClick={followClick}>
               <svg className={style.panel} aria-hidden="true">
-                <use xlinkHref={active.guanzhu === false ? "#icon-guanzhuxuanzhong" : '#icon-guanzhuxuanzhong-copy'}></use>
+                <use xlinkHref={!!data?.follow_status === false ? "#icon-guanzhuxuanzhong" : '#icon-guanzhuxuanzhong-copy'}></use>
               </svg>
               {
-                props.panel_type === 'horizontal' ? <div className={style.panelText}>{props.article_data.zan}</div> : <></>
+                panel_type === 'horizontal' ? <div className={style.panelText}>{data?.follow_status}</div> : <></>
               }
 
           </div>
 
-          <div className={style.panelWrapper} data-panel="save">
+          <div className={style.panelWrapper} data-panel="save"  onClick={collectClick}>
             <svg className={style.panel} aria-hidden="true">
-              <use xlinkHref={active.save === false ? "#icon-shoucangshixin" : '#icon-shoucangshixin-copy'} ></use>
+              <use xlinkHref={!!data?.collect_status === false ? "#icon-shoucangshixin" : '#icon-shoucangshixin-copy'} ></use>
             </svg>
             {
-                props.panel_type === 'horizontal' ? <div className={style.panelText}>{props.article_data.zan}</div> : <></>
+                panel_type === 'horizontal' ? <div className={style.panelText}>{data?.collect_status}</div> : <></>
               }
           </div>
-
-        {/* <div className={style.panelWrapper} data-panel="chat">
-          <Badge count={1}>
-            <svg className={style.panel} aria-hidden="true">
-              <use xlinkHref='#icon-bg-chat'></use>
-            </svg>
-          </Badge>
-        </div> */}
-
       </Space>
   )
 }

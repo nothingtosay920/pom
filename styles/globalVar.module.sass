@@ -1,12 +1,15 @@
 // color
 $color-white: #fff
+$color-gray-2: #dddee4
 $color-gray-1: #f5f5f5
 $color-gray: #E5E6EB
-$color-green: #bef9df
-$color-orange-1: #f9ecbe
-$color-orange: #f7b0b0
+$color-green: #c7ffe7
+$color-green-1: #b9efd7
+$color-orange-1: #fff3c7
+$color-orange: #eee1b5
 $color-blue-1: #E8F3FF
 $color-blue-2: #BEDAFF
+$color-blue-2-1: #afcaee
 $color-blue-3: #6AA1FF
 $color-blue-4: #165DFF
 $color-dark-3: #b2b7b8
@@ -14,6 +17,7 @@ $color-dark-2: #ededed
 $color-dark-1: #666666
 $color-dark: #4f4f4f
 $color-theme: #72eee6
+$color-primary-blue: rgb(22, 93, 255)
 // center
 @mixin flex($direction)
   display: flex
@@ -25,6 +29,13 @@ $color-theme: #72eee6
   height: $height
   line-height: $height
   text-align: center
+
+@mixin panel-large()
+  vertical-align: -0.15em
+  fill: currentColor
+  overflow: hidden
+  width: 46px
+  height: 46px
 
 @mixin panel()
   vertical-align: -0.15em
