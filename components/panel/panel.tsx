@@ -67,7 +67,7 @@ const Panel:React.FunctionComponent<PanelProps> = ({panel_type = 'vertical', art
   }
 
   const zanClick = () => {
-    if (isSuccess) {
+    if (isSuccess && data) {
       addZanMutation.mutate(!data.zan_status)
     } else {
       Message.info('当前未登录')
@@ -76,7 +76,7 @@ const Panel:React.FunctionComponent<PanelProps> = ({panel_type = 'vertical', art
   }
 
   const followClick = () => {
-    if (isSuccess) {
+    if (isSuccess && data) {
       followArticleMuation.mutate(!data.follow_status)
     } else {
       Message.info('当前未登录')
@@ -85,7 +85,7 @@ const Panel:React.FunctionComponent<PanelProps> = ({panel_type = 'vertical', art
   }
 
   const collectClick = () => {
-    if (isSuccess) {
+    if (isSuccess && data) {
       collectArticles.mutate(!data.collect_status)
     }else {
       Message.info('当前未登录')

@@ -46,7 +46,7 @@ const DynamicComponents = () => {
     }
   }[]  = []
 
-  if (isSuccess) {
+  if (isSuccess && data) {
     list = data.pages.reduce<{
       timestamp: string;
       article_id: string;

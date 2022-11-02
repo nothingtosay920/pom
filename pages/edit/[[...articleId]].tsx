@@ -5,7 +5,6 @@ import style from '../../styles/Writing.module.sass';
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { GetArticle, GetCategorys, GetLabels, GetMusterArticles, GetWritingArticleById } from '../../api/interface/api';
 import { UploadItem } from '@arco-design/web-react/es/Upload';
-import { PostImgToAliyun, getImg } from '../../utills/fetch';
 import { ArticleClassType, Category, getCategorysRes, getLabelsRes, LabelMapType, Labels } from '../../api/interface/types';
 import Router, { useRouter } from 'next/router';
 import Login from '../../components/menu/login';
@@ -15,6 +14,7 @@ import { saveGatherMutation, submitGatherMutation } from '../../api/gql/gql';
 import { nanoid } from 'nanoid';
 import { IconDelete } from '@arco-design/web-react/icon';
 import { getNowTime } from '../../utills/utill';
+import { PostImgToAliyun } from '../../utills/fetch';
 
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
@@ -787,6 +787,10 @@ export function UserArticleComponent({article}: {article: GatheInputrType}) {
 
     if (isLoading) {
       return <Spin></Spin>
+    }
+
+    if (!data) {
+      return <></>
     }
     
     return (
