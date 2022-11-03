@@ -1,5 +1,5 @@
 # Pom
-pom的设计是包含推荐系统、elasticSearch为用户提供文章的推送和阅读以及创作。
+pom的设计是结合推荐系统、elasticSearch为用户提供文章的推送和阅读以及创作。
 
 技术栈：next.js、typescript、react-router、react-toolkit、react-query和graphql-request。
 
